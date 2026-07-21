@@ -12,19 +12,19 @@ def get_bots_start_with(bots: Bots, start_wiht:str):
 
 def to_date_iso(valor_fecha):
     if isinstance(valor_fecha, datetime):
-        return valor_fecha.isoformat() + "Z"
+        return valor_fecha.isoformat()
 
     if isinstance(valor_fecha, str):
         texto_limpio = valor_fecha.strip().replace("/", "-")
         
         try:
             fecha_obj = datetime.strptime(texto_limpio, "%Y-%m-%d %H:%M:%S")
-            return fecha_obj.isoformat() + "Z"
+            return fecha_obj.isoformat()
             
         except ValueError:
             try:
                 fecha_obj = datetime.strptime(texto_limpio, "%Y-%m-%d")
-                return fecha_obj.isoformat() + "Z"
+                return fecha_obj.isoformat()
                 
             except ValueError:
                 raise ValueError(f"Formato invalido. Formato valido: YYYY-MM-DD o YYYY-MM-DD HH:MM:SS")

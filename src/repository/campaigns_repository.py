@@ -4,7 +4,6 @@ import requests
 
 from answered_by import AnsweredBy
 from configuration import config as cfg 
-# import get_api_key, get_url_base
 from configuration.platforms import Platforms
 from status import StatusCall, StatusCampaign
 
@@ -13,23 +12,21 @@ class CampaignRepository:
     LIST_CAMPAIGNS = 'campaigns'
     RETRIVE_CAMPAING = 'campaigns/{id}'
     URL_LIST_CAMPAIGNS_CONTACTS = 'https://api.altur.io/api/v1.0/campaigns/{id}/contacts'
-    CAMPAING_CALLS = '{id}/calls'
+    CAMPAING_CALLS = 'campaigns/{id}/calls'
 
     def __init__(self, platform: Platforms):
         self.TOKEN = cfg.get_api_key(platform)
         self.URL_BASE = cfg.get_url_base()
         self.HEADERS = { 'Authorization': f"api-key {self.TOKEN}" }
 
-    def list_campigns(self, startDate = None, endDate = None, pageSize = 100, cursor = None, agentId = None, status:StatusCampaign = None, archived = False):
+    def list_campigns(self, started_after = None, started_before = None, pageSize = 50, cursor = None, agentId = None, status:StatusCampaign = None):
         params = {
-            'startDate': startDate,
-            'endDate': endDate,
             'pageSize': pageSize,
+            'startedAfter': started_after,
+            'startedBefore': started_before,
             'cursor': cursor,
             'agentId': agentId,
             'status': status.value if status else None, 
-            'integration': 'phone_call',
-            'archived': archived,
         }
 
         query_params = self.to_query_params(params)
@@ -83,7 +80,7 @@ class CampaignRepository:
         }
 
         query_params = self.to_query_params(params)
-        url = f"{self.URL_BASE}{self.URL_CAMPAING_CALLS.format(id=id_campaign)}"
+        url = f"{self.URL_BASE}{self.CAMPAING_CALLS.format(id=id_campaign)}"
         
         response = requests.get(url, params=query_params, headers=self.HEADERS)
         logging.info(f"Get campaign calls: {response.url}")
@@ -92,7 +89,7 @@ class CampaignRepository:
             return response.json()
         
         logging.warning(f"Error {response.status_code}, message: {response.text}. {response.url}")
-        return None
+        return []
         
     def to_query_params(self, params: dict):
         return {key: value for key, value in params.items() if value not in (None, '')}

@@ -11,6 +11,7 @@ import pandas as pd
 
 from controller.report_controller import router as router_report 
 from controller.campaign_controller import router as router_campaign 
+from controller.call_controller import call_router
 
 logging.basicConfig(
     level=logging.INFO, # Captura todos los mensajes (desde DEBUG hasta CRITICAL)
@@ -20,6 +21,7 @@ logging.basicConfig(
 app = FastAPI()
 app.include_router(router=router_report)
 app.include_router(router=router_campaign)
+app.include_router(router=call_router)
 
 
 # callService = CallAssetsService(Platforms.BBVA_RETARGETING)
