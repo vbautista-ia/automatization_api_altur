@@ -1,15 +1,21 @@
-from collections import defaultdict
 from datetime import datetime, timedelta
+import io
 import logging
 import os
 import time
+import zipfile
 
+import pandas as pd
+
+from answered_by import AnsweredBy
 from configuration.bots import Bots
 from configuration.platforms import Platforms
 from repository.call_repository import CallRepository
 from repository.campaigns_repository import CampaignRepository
-from status import StatusCampaign
+from utils.utils import get_bots_by_paltform, get_bots_start_with, to_date_iso
 
+class MaxRecordsReached(Exception):
+    pass
 
 class CallService:
     
@@ -17,6 +23,85 @@ class CallService:
         self.PLATFORM = platform
         self.call_repository = CallRepository(self.PLATFORM)
         self.campaign_repository = CampaignRepository(self.PLATFORM)
+
+    async def download(self, input_start, input_end, tag, segmento, max_records = 5):
+        start = to_date_iso(input_start)
+        end = to_date_iso(input_end)
+        bots = get_bots_by_paltform(self.PLATFORM)
+        agents_search = get_bots_start_with(bots, segmento)
+
+        zip_buffer = io.BytesIO()
+        info_call = {
+            'id': [],
+            'id_campaign': [],
+            'name_bot': [],
+            'name_campaign': [],
+            'started_at': [],
+            'duration': [],
+            'phone_number': [],
+            'tags': []
+        }
+
+        with zipfile.ZipFile(zip_buffer, 'w', zipfile.ZIP_DEFLATED) as zip_file:
+            for key, name_bot in agents_search.items():
+                try:
+                    count = 0
+                    has_next = True
+                    cursor = None
+                    while has_next:
+                        campaigns = self.campaign_repository.list_campigns(started_after=start, started_before=end, cursor=cursor, agentId=key)
+                        for campaign in campaigns['campaigns']:
+                            page_index = 0
+                            has_next_calls = True
+                            while has_next_calls:
+                                campaign_calls = self.campaign_repository.get_campaign_calls(campaign['id'], pageIndex=page_index, answeredBy=AnsweredBy.HUMAN)
+                                for call in campaign_calls['calls']:
+                                    if tag in call['tags']:
+                                        response = await self.call_repository.retrive_call_recording(call['id'])
+                                        if response.status_code == 200:
+                                            zip_file.writestr(f"{call['id']}.mp3", response.content)
+
+                                            info_call['id'].append(call['id'])
+                                            info_call['id_campaign'].append(campaign['id'])
+                                            info_call['name_campaign'].append(campaign['name'])
+                                            info_call['name_bot'].append(campaign['agent']['name'])
+                                            info_call['started_at'].append(call['started_at'])
+                                            info_call['duration'].append(call['duration'])
+                                            info_call['phone_number'].append(call['contact']['phone_number'])
+                                            info_call['tags'].append(call['tags'])
+
+                                            count += 1
+                                            logging.info(f">>>>{name_bot}: {count} of {max_records} recordings were found <<<<")
+                                            if count >= max_records:
+                                                raise MaxRecordsReached()
+                                        else:
+                                            print(f"Error descargando {call['id']}, {response.status_code}")
+
+                                page_index += 1
+                                has_next_calls = campaign_calls['pagination']['has_next']
+
+                        cursor = campaigns['pagination']['next_cursor']
+                        has_next = campaigns['pagination']['has_next']
+                except MaxRecordsReached:
+                    pass
+        
+            if len(info_call['id']) > 0:
+                df = pd.DataFrame(info_call)
+                df['tags_joined'] = df['tags'].apply(
+                lambda x: '|'.join(x) if isinstance(x, list) else str(x))
+            
+                tags_df = df['tags_joined'].str.get_dummies()
+                tags_df = tags_df.astype(bool)    
+                df = df.join(tags_df)
+                df = df.drop(columns=['tags', 'tags_joined'])
+
+                excel_buffer = io.BytesIO()
+                df.to_excel(excel_buffer, index=False, engine="openpyxl")
+                file_name = f"reporte_{datetime.now().strftime('%Y-%m-%d_%H-%M-%S')}.xlsx"                
+                zip_file.writestr(file_name, excel_buffer.getvalue())
+        
+        zip_buffer.seek(0)
+        return zip_buffer
 
     def download_recording(self, id, name_file, path_download, id_bot):
         recording = self.call_repository.retrive_call_recording(id)
