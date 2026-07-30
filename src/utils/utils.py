@@ -7,7 +7,7 @@ from configuration.platforms import Platforms
 def get_bots_by_paltform(platform:Platforms):
     return Bots[platform.name].value
 
-def get_bots_start_with(bots: Bots, start_wiht:str):
+def get_bots_start_with(bots: dict, start_wiht:str):
     return {key: bot for key, bot in bots.items() if bot.startswith(start_wiht)} if start_wiht else bots
 
 def to_date_iso(valor_fecha):

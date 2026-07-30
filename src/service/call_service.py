@@ -39,7 +39,8 @@ class CallService:
             'started_at': [],
             'duration': [],
             'phone_number': [],
-            'tags': []
+            'tags': [],
+            'Cumple': []
         }
 
         with zipfile.ZipFile(zip_buffer, 'w', zipfile.ZIP_DEFLATED) as zip_file:
@@ -59,7 +60,7 @@ class CallService:
                                     if tag in call['tags']:
                                         response = await self.call_repository.retrive_call_recording(call['id'])
                                         if response.status_code == 200:
-                                            zip_file.writestr(f"{call['id']}.mp3", response.content)
+                                            zip_file.writestr(f"{name_bot.replace(segmento, '')}/{call['id']}.mp3", response.content)
 
                                             info_call['id'].append(call['id'])
                                             info_call['id_campaign'].append(campaign['id'])
@@ -69,6 +70,7 @@ class CallService:
                                             info_call['duration'].append(call['duration'])
                                             info_call['phone_number'].append(call['contact']['phone_number'])
                                             info_call['tags'].append(call['tags'])
+                                            info_call['Cumple'].append('SI')
 
                                             count += 1
                                             logging.info(f">>>>{name_bot}: {count} of {max_records} recordings were found <<<<")
