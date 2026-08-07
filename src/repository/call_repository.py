@@ -15,15 +15,14 @@ class CallRepository:
         self.TOKEN = get_api_key(platform)
         self.HEADERS = { 'Authorization': f'api-key {self.TOKEN}'}
 
-    async def retrive_call_recording(self, id):
+    async def retrive_call_recording(self, id, client: httpx.AsyncClient):
         url = self.URL_DOWNLOAD_CALL.replace('ID', str(id))
         try:
-            async with httpx.AsyncClient() as client:
-                response = await client.get(url=url, headers=self.HEADERS)
-                if response.status_code == 200:
-                    return response
-                logging.warning(f"Failed downloading record, id {id}. Error: {response.status_code}, message: {response.text}")
-                return None
+            response = await client.get(url=url, headers=self.HEADERS)
+            if response.status_code == 200:
+                return response
+            logging.warning(f"Failed downloading record, id {id}. Error: {response.status_code}, message: {response.text}")
+            return None
         except Exception as e:
             logging.error(f"Error fetching record {id} from API. Error: {e}", exc_info=True)
             return None

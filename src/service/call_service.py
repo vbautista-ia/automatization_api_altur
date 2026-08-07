@@ -5,6 +5,7 @@ import os
 import time
 import zipfile
 
+import httpx
 import pandas as pd
 
 from answered_by import AnsweredBy
@@ -44,48 +45,53 @@ class CallService:
         }
 
         with zipfile.ZipFile(zip_buffer, 'w', zipfile.ZIP_DEFLATED) as zip_file:
-            for key, name_bot in agents_search.items():
-                try:
-                    count = 0
-                    has_next = True
-                    cursor = None
-                    while has_next:
-                        campaigns = self.campaign_repository.list_campigns(started_after=start, started_before=end, cursor=cursor, agentId=key)
-                        for campaign in campaigns['campaigns']:
-                            page_index = 0
-                            has_next_calls = True
-                            while has_next_calls:
-                                campaign_calls = self.campaign_repository.get_campaign_calls(campaign['id'], pageIndex=page_index, answeredBy=AnsweredBy.HUMAN)
-                                for call in campaign_calls['calls']:
-                                    if tag in call['tags']:
-                                        response = await self.call_repository.retrive_call_recording(call['id'])
-                                        if response.status_code == 200:
-                                            zip_file.writestr(f"{name_bot.replace(segmento, '')}/{call['id']}.mp3", response.content)
+            async with httpx.AsyncClient(timeout=30.0) as client:
+                for key, name_bot in agents_search.items():
+                    try:
+                        count = 0
+                        has_next = True
+                        cursor = None
+                        while has_next:
+                            list_campaigns = await self.campaign_repository.list_campigns(client=client, started_after=start, started_before=end, cursor=cursor, agentId=key)
+                            campaigns = list_campaigns.get('campaigns')
+                            if campaigns:
+                                for campaign in campaigns:
+                                    page_index = 0
+                                    has_next_calls = True
+                                    while has_next_calls:
+                                        campaign_calls = await self.campaign_repository.get_campaign_calls(client, campaign['id'], pageIndex=page_index, answeredBy=AnsweredBy.HUMAN)
+                                        calls = campaign_calls.get('calls')
+                                        if calls:
+                                            for call in calls:
+                                                if tag in call['tags']:
+                                                    response = await self.call_repository.retrive_call_recording(call['id'], client)
+                                                    if response.status_code == 200:
+                                                        zip_file.writestr(f"{name_bot.replace(segmento, '')}/{call['id']}.mp3", response.content)
 
-                                            info_call['id'].append(call['id'])
-                                            info_call['id_campaign'].append(campaign['id'])
-                                            info_call['name_campaign'].append(campaign['name'])
-                                            info_call['name_bot'].append(campaign['agent']['name'])
-                                            info_call['started_at'].append(call['started_at'])
-                                            info_call['duration'].append(call['duration'])
-                                            info_call['phone_number'].append(call['contact']['phone_number'])
-                                            info_call['tags'].append(call['tags'])
-                                            info_call['Cumple'].append('SI')
+                                                        info_call['id'].append(call['id'])
+                                                        info_call['id_campaign'].append(campaign['id'])
+                                                        info_call['name_campaign'].append(campaign['name'])
+                                                        info_call['name_bot'].append(campaign['agent']['name'])
+                                                        info_call['started_at'].append(call['started_at'])
+                                                        info_call['duration'].append(call['duration'])
+                                                        info_call['phone_number'].append(call['contact']['phone_number'])
+                                                        info_call['tags'].append(call['tags'])
+                                                        info_call['Cumple'].append('SI')
 
-                                            count += 1
-                                            logging.info(f">>>>{name_bot}: {count} of {max_records} recordings were found <<<<")
-                                            if count >= max_records:
-                                                raise MaxRecordsReached()
-                                        else:
-                                            print(f"Error descargando {call['id']}, {response.status_code}")
+                                                        count += 1
+                                                        logging.info(f">>>>{name_bot}: {count} of {max_records} recordings were found <<<<")
+                                                        if count >= max_records:
+                                                            raise MaxRecordsReached()
+                                                    else:
+                                                        print(f"Error descargando {call['id']}, {response.status_code}")
 
-                                page_index += 1
-                                has_next_calls = campaign_calls['pagination']['has_next']
+                                        has_next_calls = campaign_calls.get('pagination', {}).get('has_next', False)
+                                        page_index += 1
 
-                        cursor = campaigns['pagination']['next_cursor']
-                        has_next = campaigns['pagination']['has_next']
-                except MaxRecordsReached:
-                    pass
+                            cursor = list_campaigns.get('pagination', {}).get('next_cursor')
+                            has_next = list_campaigns.get('pagination', {}).get('has_next', False)
+                    except MaxRecordsReached:
+                        pass
         
             if len(info_call['id']) > 0:
                 df = pd.DataFrame(info_call)
