@@ -34,9 +34,7 @@ class CampaignRepository:
         query_params = self.to_query_params(params)
         url = f"{self.URL_BASE}{self.LIST_CAMPAIGNS}"
         try:
-            response = await client.get(url=url, params=params, headers=self.HEADERS)
-            # response = requests.get(, params=query_params, headers=self.HEADERS)
-            # logging.info(f"Get campaigns: {response.url}")
+            response = await client.get(url=url, params=query_params, headers=self.HEADERS)
             if response.status_code == 200:
                 return response.json()
             logging.warning(f"Error {response.status_code}, message: {response.text}. {response.url}")
@@ -90,7 +88,7 @@ class CampaignRepository:
                 logging.warning(f"Error {response.status_code}, message: {response.text}. {response.url}")
         return {}
 
-    def get_campaign_calls(self, id_campaign, pageIndex, startDate = None, endDate = None, pageSize = 100, answeredBy: AnsweredBy = None, status: StatusCall = None):
+    async def get_campaign_calls(self, client: httpx.AsyncClient, id_campaign, pageIndex: int, startDate = None, endDate = None, pageSize = 100, answeredBy: AnsweredBy = None, status: StatusCall = None):
         params = {
             'answeredBy': answeredBy.value if answeredBy else None,
             'startDate': startDate,
@@ -103,14 +101,13 @@ class CampaignRepository:
         query_params = self.to_query_params(params)
         url = f"{self.URL_BASE}{self.CAMPAING_CALLS.format(id=id_campaign)}"
         
-        response = requests.get(url, params=query_params, headers=self.HEADERS)
-        logging.info(f"Get campaign calls: {response.url}")
+        response = await client.get(url, params=query_params, headers=self.HEADERS)
 
         if response.status_code == 200:
             return response.json()
         
         logging.warning(f"Error {response.status_code}, message: {response.text}. {response.url}")
-        return []
+        return {}
         
     def to_query_params(self, params: dict):
         return {key: value for key, value in params.items() if value not in (None, '')}
