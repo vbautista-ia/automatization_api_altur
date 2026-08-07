@@ -1,17 +1,20 @@
+import asyncio
 import logging
+from ssl import SSLError
 
+import httpx
 import requests
 
 from answered_by import AnsweredBy
 from configuration import config as cfg 
 from configuration.platforms import Platforms
 from status import StatusCall, StatusCampaign
-
+ 
 
 class CampaignRepository:
     LIST_CAMPAIGNS = 'campaigns'
     RETRIVE_CAMPAING = 'campaigns/{id}'
-    URL_LIST_CAMPAIGNS_CONTACTS = 'https://api.altur.io/api/v1.0/campaigns/{id}/contacts'
+    CAMPAIGNS_CONTACTS = 'campaigns/{id}/contacts'
     CAMPAING_CALLS = 'campaigns/{id}/calls'
 
     def __init__(self, platform: Platforms):
@@ -19,7 +22,7 @@ class CampaignRepository:
         self.URL_BASE = cfg.get_url_base()
         self.HEADERS = { 'Authorization': f"api-key {self.TOKEN}" }
 
-    def list_campigns(self, started_after = None, started_before = None, pageSize = 50, cursor = None, agentId = None, status:StatusCampaign = None):
+    async def list_campigns(self, client: httpx.AsyncClient, started_after = None, started_before = None, pageSize = 100, cursor = None, agentId = None, status:StatusCampaign = None):
         params = {
             'pageSize': pageSize,
             'startedAfter': started_after,
@@ -28,17 +31,26 @@ class CampaignRepository:
             'agentId': agentId,
             'status': status.value if status else None, 
         }
-
         query_params = self.to_query_params(params)
-
-        response = requests.get(f"{self.URL_BASE}{self.LIST_CAMPAIGNS}", params=query_params, headers=self.HEADERS)
-        logging.info(f"Get campaigns: {response.url}")
-
-        if response.status_code == 200:
-            return response.json()
-        
-        logging.warning(f"Error {response.status_code}, message: {response.text}. {response.url}")
-        return None
+        url = f"{self.URL_BASE}{self.LIST_CAMPAIGNS}"
+        try:
+            response = await client.get(url=url, params=params, headers=self.HEADERS)
+            # response = requests.get(, params=query_params, headers=self.HEADERS)
+            # logging.info(f"Get campaigns: {response.url}")
+            if response.status_code == 200:
+                return response.json()
+            logging.warning(f"Error {response.status_code}, message: {response.text}. {response.url}")
+        except (SSLError, httpx.ReadTimeout, httpx.ConnectError) as e:
+            logging.info(f"ocurrio un error {e}")
+            await asyncio.sleep(1)
+            try:
+                response = await client.get(url=url, params=params, headers=self.HEADERS)
+                logging.info(f"Retrive get campaigns: {response.url}")
+                if response.status_code == 200:
+                    return response.json()
+            except Exception as e:
+                logging.warning(f"Error Retrive {response.status_code}, message: {response.text}. {response.url}")
+        return {}
 
     def retrive_campign(self, id_campaign: str):
         url = f"{self.URL_BASE}{self.RETRIVE_CAMPAING.format(id=id_campaign)}"
@@ -52,22 +64,31 @@ class CampaignRepository:
         logging.warning(f"Error {response.status_code}, message: {response.text}. {response.url}")
         return None
     
-    def list_campaign_contacts(self, id_campaign: str, pageIndex, status: str = None, pageSize = 100):
+    async def list_campaign_contacts(self, client: httpx.AsyncClient, id_campaign: str, pageIndex, status: str = None, pageSize = 100):
         params = {
             'status': status if status else None,
             'pageSize': pageSize,
             'pageIndex': pageIndex,
         }
-        url = self.URL_LIST_CAMPAIGNS_CONTACTS.format(id=id_campaign)
+        url = f"{self.URL_BASE}{self.CAMPAIGNS_CONTACTS.format(id=id_campaign)}"
+        try:
+            response = await client.get(url, params=params, headers=self.HEADERS)
 
-        response = requests.get(url, params=params, headers=self.HEADERS)
-        logging.info(f"List campaign contacts: {response.url}")
+            if response.status_code == 200:
+                return response.json()
+            logging.warning(f"Error {response.status_code}, message: {response.text}. {response.url}")
+        except (SSLError, httpx.ReadTimeout, httpx.ConnectError) as e:
+            await asyncio.sleep(1)
+            logging.info(f"ocurrio un error {e}")
+            try:
+                response = await client.get(url, params=params, headers=self.HEADERS)
+                logging.info(f"Retrive list campaign contacts: {response.url}")
 
-        if response.status_code == 200:
-            return response.json()
-        
-        logging.warning(f"Error {response.status_code}, message: {response.text}. {response.url}")
-        return None
+                if response.status_code == 200:
+                    return response.json()
+            except (SSLError, httpx.ReadTimeout, httpx.ConnectError) as e:
+                logging.warning(f"Error {response.status_code}, message: {response.text}. {response.url}")
+        return {}
 
     def get_campaign_calls(self, id_campaign, pageIndex, startDate = None, endDate = None, pageSize = 100, answeredBy: AnsweredBy = None, status: StatusCall = None):
         params = {
