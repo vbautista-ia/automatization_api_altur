@@ -47,7 +47,7 @@ def get_month(date: date):
 def to_row_excel(campaign, contact):
     return {
         'campaign_name': campaign['name'],
-        'campaign_create_at':  datetime.fromisoformat(campaign['created_at']).date(),
+        'campaign_date':  datetime.fromisoformat(campaign['created_at']).date(),
         'id': contact['f_id'],
         'contact': contact['contact'],
         'name': contact['name'],

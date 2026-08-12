@@ -13,7 +13,7 @@ class Bots(Enum):
         '880f34f9-d9a6-4616-a6b0-2ba9a717ae4e': 'SPC_Mia_Reestructura',
         '2f68a7cb-e2c8-4df0-86a9-c224ca26c4b0': 'SPC_Mia_TDC',
         '44395ce7-8b92-44f0-9b00-d96ee0d52c5d': 'SPC_Mia_AUTO',
-        'a7c57a43-0470-4abb-9dde-9d775fb8aa94': 'SPC_Mia_Seguimiento',
+        '51870303-e5a2-4760-a08c-f67950a645ad': 'SPC_Mia_Seguimiento',
         'e72a525f-8e75-4b52-8bbe-af951064d25d': 'SPC_Muvox_Hipotecario',
         'e5aa48f7-8042-4595-9157-831702bb1679': 'SPC_Muvox_Consumo',
         '78080e23-8a7b-473a-8c3c-7e79b69767b7': 'SPC_Muvox_Reestructura',
