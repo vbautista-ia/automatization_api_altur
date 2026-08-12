@@ -67,9 +67,11 @@ def to_excel(prefix_name, result, root_path):
     df = pd.DataFrame(result)
             
     tags_df = df['tags'].str.join('|').str.get_dummies()
-    tags_df = tags_df.astype(bool)
+    tags_df = tags_df.astype(bool).astype(str)
     df = df.join(tags_df)
     df = df.drop(columns=['tags'])
+    
+    df['follow_up'] = df['follow_up'].astype(str)    
     
     diccionarios = df['extracted_data'].apply(lambda x: x if isinstance(x, dict) else {})
     extracted_df = pd.DataFrame(diccionarios.tolist(), index=df.index)
