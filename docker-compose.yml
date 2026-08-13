@@ -10,4 +10,13 @@ services:
     environment:
       - PYTHONUNBUFFERED=1
       - .env
+    networks:
+      - red_docker
+
+networks:
+  red_docker:
+    driver: bridge
+    ipam:
+      config:
+        - subnet: 10.222.0.0/24
       
