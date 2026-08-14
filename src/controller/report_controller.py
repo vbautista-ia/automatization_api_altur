@@ -2,6 +2,7 @@
 from typing import Literal
 
 from fastapi import APIRouter, Query
+from fastapi.responses import StreamingResponse
 
 from configuration.platforms import Platforms
 from service.report_service import ReportService
@@ -9,10 +10,16 @@ from service.report_service import ReportService
 
 router = APIRouter(prefix="/report", tags=["Reporteria"])
 
-@router.get("/calls")
-async def get_report_calls(input_start: str, input_end: str,
+@router.get("/contacts")
+async def get_report_contacts(input_start: str, input_end: str,
                     plataforma: Literal['BBVA_COBRANZA', 'BBVA_RETARGETING'],
                     segmento: Literal['SPC_', 'DESPACHO_', 'WELCOME_', 'SERVICE_', 'RTG_'] = Query(default=None),
                     product: str = Query(default=None)):
-    call_service = ReportService(platform=Platforms[plataforma])
-    await call_service.get_report_calls(input_start, input_end, segmento, product)
+    report_service = ReportService(platform=Platforms[plataforma])
+    response = await report_service.get_report_cantacts(input_start, input_end, segmento, product)
+    headers = { 'Content-Disposition': 'attacment; filename="report_contacts.zip"'}
+    return StreamingResponse(
+                response,
+                media_type='application/x-zip-compressed',
+                headers=headers
+            )

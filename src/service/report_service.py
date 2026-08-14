@@ -391,7 +391,7 @@ class ReportService:
         except TypeError as e:
             logging.error(f"Error de tipo de dato: {e}")
     
-    async def get_report_calls(self, date_start:str, date_end:str, agent_start_with:str = None, content: str = None):
+    async def get_report_cantacts(self, date_start:str, date_end:str, agent_start_with:str = None, content: str = None):
         bots = get_bots_by_paltform(self.PLATFORM)
         agents = get_bots_start_with(bots, agent_start_with)
         agents = get_bots_contains(agents, content)
@@ -427,6 +427,6 @@ class ReportService:
             
             if len(result) > 0:
                 month_report = get_month(datetime.fromisoformat(start).date())
-                await asyncio.to_thread(to_excel, month_report, result, self.PLATFORM.value)
+                return await asyncio.to_thread(to_excel, month_report, result)
             else:
                 logging.info('Calls not found')
