@@ -1,0 +1,166 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dashboard</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+</head>
+<body class="bg-light">
+
+<div class="container py-5">
+    <h1 class="mb-4 text-center">Dashboard de Reportes y Llamadas</h1>
+
+    <div class="card shadow-sm mb-5">
+        <div class="card-header bg-primary text-white">
+            <h4 class="mb-0">Reporte de Contactos</h4>
+        </div>
+        <div class="card-body">
+            <form id="formContacts" onsubmit="descargarReporte(event)">
+                <div class="row g-3">
+                    <div class="col-md-6">
+                        <label class="form-label">Fecha Inicio (input_start)</label>
+                        <input type="datetime-local" step="1" class="form-control" name="input_start" required>
+                    </div>
+                    <div class="col-md-6">
+                        <label class="form-label">Fecha Fin (input_end)</label>
+                        <input type="datetime-local" step="1" class="form-control" name="input_end" required>
+                    </div>
+                    
+                    <div class="col-md-4">
+                        <label class="form-label">Plataforma</label>
+                        <select class="form-select" name="plataforma" required>
+                            <option value="">Selecciona una opción</option>
+                            <option value="BBVA_COBRANZA">BBVA_COBRANZA</option>
+                            <option value="BBVA_RETARGETING">BBVA_RETARGETING</option>
+                        </select>
+                    </div>
+                    <div class="col-md-4">
+                        <label class="form-label">Segmento <span class="text-muted">(Opcional)</span></label>
+                        <select class="form-select" name="segmento">
+                            <option value="">Todos</option>
+                            <option value="SPC_">SPC_</option>
+                            <option value="DESPACHO_">DESPACHO_</option>
+                            <option value="WELCOME_">WELCOME_</option>
+                            <option value="SERVICE_">SERVICE_</option>
+                            <option value="RTG_">RTG_</option>
+                        </select>
+                    </div>
+                    <div class="col-md-4">
+                        <label class="form-label">Producto <span class="text-muted">(Opcional)</span></label>
+                        <input type="text" class="form-control" name="product" placeholder="Ej. Hipotecario">
+                    </div>
+                </div>
+                <div class="mt-4 text-end">
+                    <button type="submit" class="btn btn-primary">Descargar Reporte (.zip)</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <div class="card shadow-sm">
+        <div class="card-header bg-success text-white">
+            <h4 class="mb-0">Descarga de Llamadas</h4>
+        </div>
+        <div class="card-body">
+            <form id="formCalls" onsubmit="descargarLlamadas(event)">
+                <div class="row g-3">
+                    <div class="col-md-6">
+                        <label class="form-label">Fecha Inicio (input_start)</label>
+                        <input type="datetime-local" step="1" class="form-control" name="input_start" required>
+                    </div>
+                    <div class="col-md-6">
+                        <label class="form-label">Fecha Fin (input_end)</label>
+                        <input type="datetime-local" step="1" class="form-control" name="input_end" required>
+                    </div>
+
+                    <div class="col-md-3">
+                        <label class="form-label">Tag</label>
+                        <input type="text" class="form-control" name="tag" placeholder="Ej. Venta_Cerrada" required>
+                    </div>
+                    <div class="col-md-3">
+                        <label class="form-label">Plataforma</label>
+                        <select class="form-select" name="plataforma" required>
+                            <option value="">Selecciona una opción</option>
+                            <option value="BBVA_COBRANZA">BBVA_COBRANZA</option>
+                            <option value="BBVA_RETARGETING">BBVA_RETARGETING</option>
+                        </select>
+                    </div>
+                    <div class="col-md-3">
+                        <label class="form-label">Segmento <span class="text-muted">(Opcional)</span></label>
+                        <select class="form-select" name="segmento">
+                            <option value="">Todos</option>
+                            <option value="SPC_">SPC_</option>
+                            <option value="DESPACHO_">DESPACHO_</option>
+                            <option value="WELCOME_">WELCOME_</option>
+                            <option value="SERVICE_">SERVICE_</option>
+                            <option value="RTG_">RTG_</option>
+                        </select>
+                    </div>
+                    <div class="col-md-4">
+                        <label class="form-label">Producto <span class="text-muted">(Opcional)</span></label>
+                        <input type="text" class="form-control" name="product" placeholder="Ej. Hipotecario">
+                    </div>
+                    <div class="col-md-3">
+                        <label class="form-label">Máx. Registros</label>
+                        <input type="number" class="form-control" name="max_records" value="5" min="1" required>
+                    </div>
+                </div>
+                <div class="mt-4 text-end">
+                    <button type="submit" class="btn btn-success">Descargar Llamadas (.zip)</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<script>
+    function formatearFechaISO(fechaInput) {
+        let fecha = fechaInput.replace('T', ' ').replace('+', ' ');
+        if (fecha.length === 16) {
+            fecha += ':00';
+        }
+        return fecha;
+    }
+
+    function procesarDescarga(formId, baseUrl) {
+        const form = document.getElementById(formId);
+        const formData = new FormData(form);
+        
+        const startVal = formData.get('input_start');
+        const endVal = formData.get('input_end');
+        
+        if (new Date(startVal) > new Date(endVal)) {
+            alert("Error: La fecha de inicio no puede ser mayor que la fecha de fin.");
+            return;
+        }
+
+        const params = new URLSearchParams();
+
+        for (const [key, value] of formData.entries()) {
+            if (value.trim() !== '') {
+                if (key === 'input_start' || key === 'input_end') {
+                    params.append(key, formatearFechaISO(value));
+                } else {
+                    params.append(key, value);
+                }
+            }
+        }
+
+        const finalUrl = `${baseUrl}?${params.toString()}`;
+        window.location.href = finalUrl.replace('+', ' ');
+    }
+
+    function descargarReporte(e) {
+        e.preventDefault();
+        procesarDescarga('formContacts', '/report/contacts');
+    }
+
+    function descargarLlamadas(e) {
+        e.preventDefault();
+        procesarDescarga('formCalls', '/call/download/');
+    }
+</script>
+
+</body>
+</html>
