@@ -17,7 +17,9 @@ def get_bots_start_with(bots: dict, start_wiht:str):
     return {key: bot for key, bot in bots.items() if bot.startswith(start_wiht)} if start_wiht else bots
 
 def get_bots_contains(bots: dict, content:str):
-    return {key: bot for key, bot in bots.items() if content in bot} if content else bots
+    lower_bots = {key: bot.casefold() for key, bot in bots.items()}
+    content = content.casefold()
+    return {key: bot for key, bot in lower_bots.items() if content in bot} if content else bots
 
 def to_date_iso(valor_fecha):
     if isinstance(valor_fecha, datetime):
