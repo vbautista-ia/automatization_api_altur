@@ -116,7 +116,7 @@
 
 <script>
     function formatearFechaISO(fechaInput) {
-        let fecha = fechaInput.replace('T', ' ').replace('+', ' ');
+        let fecha = fechaInput.replace('T', ' ');
         if (fecha.length === 16) {
             fecha += ':00';
         }
@@ -148,7 +148,7 @@
         }
 
         const finalUrl = `${baseUrl}?${params.toString()}`;
-        window.location.href = finalUrl.replace('+', ' ');
+        window.location.href = finalUrl.replaceAll('+', ' ');
     }
 
     function descargarReporte(e) {
