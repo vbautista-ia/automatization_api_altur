@@ -1,7 +1,9 @@
 
 from datetime import date, datetime
+import io
 import logging
 import os
+import zipfile
 
 import pandas as pd
 
@@ -62,10 +64,10 @@ def to_row_excel(campaign, contact):
         'extracted_data': contact['extracted_data'],
     }
     
-def to_excel(prefix_name, result, root_path):
+def to_excel(prefix_name, result):
     logging.info("<<<<<<<<<< Save in excel flile >>>>>>>>>>")
     df = pd.DataFrame(result)
-            
+    
     tags_df = df['tags'].str.join('|').str.get_dummies()
     tags_df = tags_df.astype(bool).astype(str)
     df = df.join(tags_df)
@@ -80,43 +82,53 @@ def to_excel(prefix_name, result, root_path):
     df = df.join(extracted_df)
     df = df.drop(columns=['extracted_data'])
 
-    file_name_base = f"{prefix_name}_{datetime.now().strftime('%Y-%m-%d_%H-%M-%S')}"
-    path = os.path.join(root_path)
-    os.makedirs(path, exist_ok=True)   
-
+    file_name_base = f"{prefix_name}_contacts_mult_camp"
+    zip_buffer = io.BytesIO()
     MAX_ROWS = 1048570 
-
-    if len(df) <= MAX_ROWS:
-        full_path = os.path.join(path, f"{file_name_base}.xlsx")
-        df.to_excel(full_path, sheet_name='calls', index=False, engine="openpyxl")
     
-    else:
-        logging.info(">>> El archivo supera el límite de Excel. Segmentando por campañas...")
+    with zipfile.ZipFile(zip_buffer, 'w', zipfile.ZIP_DEFLATED) as zip_file:
+
+        if len(df) <= MAX_ROWS:
+            excel_buffer = io.BytesIO()
+            df.to_excel(excel_buffer, index=False, engine='openpyxl')
+            file_name = f"{file_name_base}.xlsx"
+            zip_file.writestr(file_name, excel_buffer.getvalue())
         
-        campaign_groups = df.groupby('campaign_name')
-        current_chunk_dfs = []
-        current_row_count = 0
-        file_index = 1
-        
-        for campaign_name, group_df in campaign_groups:
-            group_len = len(group_df)
-   
-            if current_row_count + group_len > MAX_ROWS and current_chunk_dfs:
-                chunk_to_save = pd.concat(current_chunk_dfs)
-                chunk_path = os.path.join(path, f"{file_name_base}_part_{file_index}.xlsx")
-                chunk_to_save.to_excel(chunk_path, sheet_name='calls', index=False, engine="openpyxl")
-                print(f"Guardado {chunk_path} con {current_row_count} registros.")
+        else:
+            logging.info(">>> El archivo supera el límite de Excel. Segmentando por campañas...")
+            
+            campaign_groups = df.groupby('campaign_name')
+            current_chunk_dfs = []
+            current_row_count = 0
+            file_index = 1
+            
+            for campaign_name, group_df in campaign_groups:
+                group_len = len(group_df)
+    
+                if current_row_count + group_len > MAX_ROWS and current_chunk_dfs:
+                    chunk_to_save = pd.concat(current_chunk_dfs)
+                    chunk_path = f"{file_name_base}_part_{file_index}.xlsx"
+                    
+                    chunk_excel_buffer = io.BytesIO()
+                    chunk_to_save.to_excel(chunk_excel_buffer, sheet_name='contacts', index=False, engine='openpyxl')
+                    zip_file.writestr(chunk_path, excel_buffer.getvalue())
+                    logging.info(f"Guardado {chunk_path} con {current_row_count} registros.")
+                    
+                    current_chunk_dfs = []
+                    current_row_count = 0
+                    file_index += 1
                 
-                current_chunk_dfs = []
-                current_row_count = 0
-                file_index += 1
-            
-            current_chunk_dfs.append(group_df)
-            current_row_count += group_len
-            
-        if current_chunk_dfs:
-            chunk_to_save = pd.concat(current_chunk_dfs)
-            chunk_path = os.path.join(path, f"{file_name_base}_part_{file_index}.xlsx")
-            chunk_to_save.to_excel(chunk_path, sheet_name='calls', index=False, engine="openpyxl")
-            print(f"Guardado {chunk_path} con {current_row_count} registros (Último archivo).")
+                current_chunk_dfs.append(group_df)
+                current_row_count += group_len
+                
+            if current_chunk_dfs:
+                chunk_to_save = pd.concat(current_chunk_dfs)
+                chunk_path = f"{file_name_base}_part_{file_index}.xlsx"
+                
+                chunk_excel_buffer = io.BytesIO()
+                chunk_to_save.to_excel(chunk_excel_buffer, sheet_name='contacts', index=False, engine="openpyxl")
+                zip_file.writestr(chunk_path, chunk_excel_buffer.getvalue())
+                logging.info(f"Guardado {chunk_path} con {current_row_count} registros (Último archivo).")
+    zip_buffer.seek(0)
+    return zip_buffer
     
