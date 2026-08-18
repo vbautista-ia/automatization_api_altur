@@ -1,7 +1,7 @@
 
 from typing import Literal
 
-from fastapi import APIRouter, Query
+from fastapi import APIRouter, HTTPException, Query
 from fastapi.responses import StreamingResponse
 
 from configuration.platforms import Platforms
@@ -18,6 +18,13 @@ async def get_report_contacts(input_start: str, input_end: str,
     report_service = ReportService(platform=Platforms[plataforma])
     response = await report_service.get_report_cantacts(input_start, input_end, segmento, product)
     headers = { 'Content-Disposition': 'attacment; filename="report_contacts.zip"'}
+    
+    if response is None:
+        raise HTTPException(
+            status_code=404, 
+            detail="No se encontraron llamadas o contactos en el rango seleccionado."
+        )
+
     return StreamingResponse(
                 response,
                 media_type='application/x-zip-compressed',

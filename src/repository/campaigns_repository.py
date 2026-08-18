@@ -6,7 +6,7 @@ import httpx
 import requests
 
 from answered_by import AnsweredBy
-from configuration import config as cfg 
+from configuration.enviroments import START_ENV, URL, get_env
 from configuration.platforms import Platforms
 from status import StatusCall, StatusCampaign
  
@@ -18,8 +18,9 @@ class CampaignRepository:
     CAMPAING_CALLS = 'campaigns/{id}/calls'
 
     def __init__(self, platform: Platforms):
-        self.TOKEN = cfg.get_api_key(platform)
-        self.URL_BASE = cfg.get_url_base()
+        self.TOKEN = get_env(f"{START_ENV}{platform.name}")
+        self.URL_BASE = get_env(URL)
+        
         self.HEADERS = { 'Authorization': f"api-key {self.TOKEN}" }
 
     async def list_campigns(self, client: httpx.AsyncClient, started_after = None, started_before = None, pageSize = 100, cursor = None, agentId = None, status:StatusCampaign = None):

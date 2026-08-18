@@ -2,7 +2,7 @@ import logging
 import httpx
 import requests
 
-from configuration.config import get_api_key
+from configuration.enviroments import START_ENV, get_env
 from configuration.platforms import Platforms
 
 
@@ -10,9 +10,8 @@ class CallRepository:
     URL_DOWNLOAD_CALL = 'https://api.altur.io/api/v1.0/call/ID/recording'
     URL_RETRIVE_CALL = 'https://api.altur.io/api/v1.0/call/ID'
     
-
     def __init__(self, platform: Platforms):
-        self.TOKEN = get_api_key(platform)
+        self.TOKEN = get_env(f"{START_ENV}{platform.name}")
         self.HEADERS = { 'Authorization': f'api-key {self.TOKEN}'}
 
     async def retrive_call_recording(self, id, client: httpx.AsyncClient):
