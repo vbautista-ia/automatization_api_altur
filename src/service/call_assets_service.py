@@ -1,8 +1,8 @@
 import logging
 import time
 
-from configuration.bots import Bots
-from configuration.platforms import Platforms
+from config.bots import Bots
+from config.platforms import Platforms
 from repository.call_repository import CallRepository
 from service.call_service import CallService
 from service.messages_service import MessagesService

@@ -3,7 +3,7 @@ from typing import Literal
 from fastapi import APIRouter, Query
 from fastapi.responses import StreamingResponse
 
-from configuration.platforms import Platforms
+from config.platforms import Platforms
 from service.call_service import CallService
 
 

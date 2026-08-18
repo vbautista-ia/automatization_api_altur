@@ -2,8 +2,8 @@ import logging
 import httpx
 import requests
 
-from configuration.enviroments import START_ENV, get_env
-from configuration.platforms import Platforms
+from config.enviroments import START_ENV, get_env
+from config.platforms import Platforms
 
 
 class CallRepository:

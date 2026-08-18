@@ -4,7 +4,7 @@ from typing import Literal
 from fastapi import APIRouter, HTTPException, Query
 from fastapi.responses import StreamingResponse
 
-from configuration.platforms import Platforms
+from config.platforms import Platforms
 from service.report_service import ReportService
 
 

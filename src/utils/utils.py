@@ -7,8 +7,8 @@ import zipfile
 
 import pandas as pd
 
-from configuration.bots import Bots
-from configuration.platforms import Platforms
+from config.bots import Bots
+from config.platforms import Platforms
 
 def get_bots_by_paltform(platform:Platforms):
     return Bots[platform.name].value

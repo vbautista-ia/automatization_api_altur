@@ -6,8 +6,8 @@ import httpx
 import requests
 
 from answered_by import AnsweredBy
-from configuration.enviroments import START_ENV, URL, get_env
-from configuration.platforms import Platforms
+from config.enviroments import START_ENV, URL, get_env
+from config.platforms import Platforms
 from status import StatusCall, StatusCampaign
  
 
