@@ -1,0 +1,25 @@
+version: '3.8'
+
+services:
+  back_automatization:
+    build:
+      context: .
+      network: host
+    container_name: fastapi_server
+    ports:
+      - "80:8000"
+    restart: always
+    environment:
+      - PYTHONUNBUFFERED=1
+    env_file:
+      - .env
+    networks:
+      - red_docker
+
+networks:
+  red_docker:
+    driver: bridge
+    ipam:
+      config:
+        - subnet: 10.222.0.0/24
+      

@@ -13,7 +13,7 @@ from configuration.bots import Bots
 from configuration.platforms import Platforms
 from repository.call_repository import CallRepository
 from repository.campaigns_repository import CampaignRepository
-from utils.utils import get_bots_by_paltform, get_bots_start_with, to_date_iso
+from utils.utils import get_bots_by_paltform, get_bots_contains, get_bots_start_with, to_date_iso
 
 class MaxRecordsReached(Exception):
     pass
@@ -25,11 +25,12 @@ class CallService:
         self.call_repository = CallRepository(self.PLATFORM)
         self.campaign_repository = CampaignRepository(self.PLATFORM)
 
-    async def download(self, input_start, input_end, tag, segmento, max_records = 5):
+    async def download(self, input_start, input_end, tag, segmento, max_records = 5, content: str = None):
         start = to_date_iso(input_start)
         end = to_date_iso(input_end)
         bots = get_bots_by_paltform(self.PLATFORM)
-        agents_search = get_bots_start_with(bots, segmento)
+        agents = get_bots_start_with(bots, segmento)
+        agents_search = get_bots_contains(agents, content)
 
         zip_buffer = io.BytesIO()
         info_call = {
