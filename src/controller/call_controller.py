@@ -17,7 +17,7 @@ async def descargar(input_start: str, input_end: str, tag: str,
                     product: str = Query(default=None)):
     call_service = CallService(platform=Platforms[plataforma])
     response = await call_service.download(input_start, input_end, tag, segmento, max_records, product)
-    headers = { 'Content-Disposition': 'attacment; filename="grabaciones.zip"'}
+    headers = { 'Content-Disposition': 'attachment; filename="grabaciones.zip"'}
     return StreamingResponse(
                 response,
                 media_type='application/x-zip-compressed',
