@@ -1,24 +1,20 @@
-from datetime import datetime
 import logging
-import os
 from fastapi import FastAPI
 from fastapi.responses import FileResponse
-from fastapi.staticfiles import StaticFiles
-import pandas as pd
 
-# from configuration.platforms import Platforms
-# from service.call_assets_service import CallAssetsService
-# from service.call_service import CallService
-# from service.report_service import ReportService
-
+from config.database import Base, engine
 from controller.report_controller import router as router_report 
 from controller.campaign_controller import router as router_campaign 
 from controller.call_controller import call_router
 
+from models.campaign import Campaign
+
 logging.basicConfig(
-    level=logging.INFO, # Captura todos los mensajes (desde DEBUG hasta CRITICAL)
-    # format='%(asctime)s - %(levelname)s - %(message)s' # Muestra fecha, nivel y texto
+    level=logging.INFO,
+    format='%(asctime)s - %(levelname)s - %(message)s' # Muestra fecha, nivel y texto
 )
+
+Base.metadata.create_all(bind=engine)
 
 app = FastAPI()
 app.include_router(router=router_report)

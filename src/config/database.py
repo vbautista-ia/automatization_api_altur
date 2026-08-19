@@ -1,10 +1,12 @@
+from typing import Annotated
+
 from sqlalchemy import create_engine
-from sqlalchemy.orm import declarative_base, sessionmaker
+from sqlalchemy.orm import Session, declarative_base, sessionmaker
 
 from config.enviroments import get_env
 
 
-DB_URL = get_env('SQLITE_PATH')
+DB_URL = get_env('DB_URL')
 
 engine = create_engine(
     url=DB_URL,
@@ -23,3 +25,5 @@ def get_db():
         yield db
     finally:
         db.close()
+
+depend_db = Annotated[Session, get_db]
