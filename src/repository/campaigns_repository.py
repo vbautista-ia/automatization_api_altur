@@ -5,10 +5,10 @@ from ssl import SSLError
 import httpx
 import requests
 
-from answered_by import AnsweredBy
 from config.enviroments import START_ENV, URL, get_env
 from config.platforms import Platforms
-from status import StatusCall, StatusCampaign
+from models.call import StatusCall, AnsweredBy
+from models.campaign import StatusCampaign
  
 
 class CampaignRepository:

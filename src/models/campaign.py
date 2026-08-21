@@ -1,9 +1,9 @@
-from datetime import date
+from datetime import datetime
 import enum
 
 from config.database import Base
 
-from sqlalchemy.orm import Mapped, mapped_column
+from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 
 class StatusCampaign(enum.Enum):
@@ -20,19 +20,22 @@ class Integration(enum.Enum):
 
 class Campaign(Base):
     __tablename__ = 'campaigns'
-    id: Mapped[int] = mapped_column(primary_key=True, index=True)
-    campaign_id: Mapped[int] = mapped_column(unique=True)
+    
+    id: Mapped[int] = mapped_column(primary_key=True, autoincrement=False, index=True)
     name: Mapped[str]
     description: Mapped[str]
     status: Mapped[StatusCampaign]
-    created_at: Mapped[date]
-    started_at: Mapped[date]
-    ended_at: Mapped[date]
-    
+    created_at: Mapped[datetime]
+    started_at: Mapped[datetime]
+    ended_at: Mapped[datetime]
+
     agent_id: Mapped[int]
     agent_name: Mapped[str]
-    
-    timezone: Mapped[date]
-    retries: Mapped[date]
+
+    timezone: Mapped[str]
+    retries: Mapped[int]
     archived: Mapped[bool]
     first_message: Mapped[str]
+    
+    calls: Mapped[list['Call']] = relationship(back_populates='campaign_belonging')
+    contacts: Mapped[list['Contact']] = relationship(back_populates='assigned_camp')

@@ -7,7 +7,7 @@ import time
 import httpx
 import pandas as pd
 
-from answered_by import AnsweredBy
+from models.call import AnsweredBy
 from config.bots import Bots
 from config.platforms import Platforms
 from repository.campaigns_repository import CampaignRepository
