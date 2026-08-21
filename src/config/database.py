@@ -1,5 +1,6 @@
 from typing import Annotated
 
+from fastapi import Depends
 from sqlalchemy import create_engine
 from sqlalchemy.orm import Session, declarative_base, sessionmaker
 
@@ -26,4 +27,4 @@ def get_db():
     finally:
         db.close()
 
-depend_db = Annotated[Session, get_db]
+depend_db = Annotated[Session, Depends(get_db)]
