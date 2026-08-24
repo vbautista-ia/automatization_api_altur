@@ -1,4 +1,7 @@
 import logging
+import models.campaign
+import models.call
+import models.contact
 from fastapi import FastAPI
 from fastapi.responses import FileResponse
 
@@ -6,13 +9,15 @@ from config.database import Base, engine
 from controller.report_controller import router as router_report 
 from controller.campaign_controller import router as router_campaign 
 from controller.call_controller import call_router
+from controller.data_importer_controller import data_router
 
-from models.campaign import Campaign
 
 logging.basicConfig(
     level=logging.INFO,
-    format='%(asctime)s - %(levelname)s - %(message)s' # Muestra fecha, nivel y texto
+    format='%(asctime)s - %(levelname)s - %(message)s'
 )
+
+logging.getLogger('sqlalchemy.engine').setLevel(logging.WARNING)
 
 Base.metadata.create_all(bind=engine)
 
@@ -20,6 +25,7 @@ app = FastAPI()
 app.include_router(router=router_report)
 app.include_router(router=router_campaign)
 app.include_router(router=call_router)
+app.include_router(router=data_router)
 
 @app.get('/', )
 async def index():
