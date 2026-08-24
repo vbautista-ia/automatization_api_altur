@@ -13,6 +13,23 @@ services:
       - PYTHONUNBUFFERED=1
     env_file:
       - .env
+    depends_on:
+      - postgres_db
+    networks:
+      - red_docker
+  
+  postgres_db:
+    image: postgres:15-alpine
+    container_name: postgres_fastapi
+    restart: always
+    environment:
+      - POSTGRES_USER=${USER_DB}
+      - POSTGRES_PASSWORD=${PASS_DB}
+      - POSTGRES_DB=${NAME_DB}
+    ports:
+      - "${PORT_DB}:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
     networks:
       - red_docker
 
@@ -22,4 +39,7 @@ networks:
     ipam:
       config:
         - subnet: 10.222.0.0/24
+
+volumes:
+  postgres_data:
       
