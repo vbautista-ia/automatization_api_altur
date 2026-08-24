@@ -4,6 +4,7 @@ import enum
 from config.database import Base
 
 from sqlalchemy.orm import Mapped, mapped_column, relationship
+from sqlalchemy import Enum as SQLEnum
 
 
 class StatusCampaign(enum.Enum):
@@ -24,13 +25,12 @@ class Campaign(Base):
     id: Mapped[int] = mapped_column(primary_key=True, autoincrement=False, index=True)
     name: Mapped[str]
     description: Mapped[str]
-    status: Mapped[StatusCampaign]
+    status: Mapped[StatusCampaign] = mapped_column(SQLEnum(StatusCampaign, native_enum=False))
     created_at: Mapped[datetime]
-    started_at: Mapped[datetime]
-    ended_at: Mapped[datetime]
+    started_at: Mapped[datetime | None]
+    ended_at: Mapped[datetime | None]
 
-    agent_id: Mapped[int]
-    agent_name: Mapped[str]
+    agent: Mapped[str]
 
     timezone: Mapped[str]
     retries: Mapped[int]

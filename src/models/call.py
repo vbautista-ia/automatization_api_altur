@@ -2,6 +2,7 @@ from datetime import datetime
 import enum
 
 from sqlalchemy import ForeignKey
+from sqlalchemy import Enum as SQLEnum
 
 from config.database import Base
 
@@ -16,9 +17,9 @@ class StatusCall(enum.Enum):
     IN_PROGRESS = 'in-progress'
 
 class AnsweredBy(enum.Enum):
-    HUMAN = 'human',
+    HUMAN = 'human'
     MACHINE = 'machine'
-    ONKNOWN = 'unknown'
+    UNKNOWN = 'unknown'
 
 class EndedBy(enum.Enum):
     AGENT = 'agent'
@@ -28,14 +29,14 @@ class EndedBy(enum.Enum):
 class Call(Base):
     __tablename__ = 'calls'
     
-    id: Mapped[int] = mapped_column(primary_key=True, autoincrement=False, index=True)
+    id: Mapped[str] = mapped_column(primary_key=True, autoincrement=False, index=True)
     type: Mapped[str]
-    status: Mapped[StatusCall]
-    answered_by: Mapped[AnsweredBy]
-    create_at: Mapped[datetime]
-    started_at: Mapped[datetime]
-    ended_at: Mapped[datetime]
-    ended_by: Mapped[EndedBy]
+    status: Mapped[StatusCall] = mapped_column(SQLEnum(StatusCall, native_enum=False))
+    answered_by: Mapped[AnsweredBy] = mapped_column(SQLEnum(AnsweredBy, native_enum=False))
+    create_at: Mapped[datetime | None]
+    started_at: Mapped[datetime | None]
+    ended_at: Mapped[datetime | None]
+    ended_by: Mapped[EndedBy | None] = mapped_column(SQLEnum(EndedBy, native_enum=False))
     ended_reason: Mapped[str]
     duration: Mapped[int]
     billed_duration: Mapped[int]
