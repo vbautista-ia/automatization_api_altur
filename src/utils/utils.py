@@ -2,13 +2,12 @@
 from datetime import date, datetime
 import io
 import logging
-import os
 import zipfile
 
 import pandas as pd
 
-from configuration.bots import Bots
-from configuration.platforms import Platforms
+from config.bots import Bots
+from config.platforms import Platforms
 
 def get_bots_by_paltform(platform:Platforms):
     return Bots[platform.name].value
@@ -42,6 +41,11 @@ def to_date_iso(valor_fecha):
             except ValueError:
                 raise ValueError(f"Formato invalido. Formato valido: YYYY-MM-DD o YYYY-MM-DD HH:MM:SS")
     raise ValueError(f"Tipo de dato incorrecto: {type(valor_fecha).__name__}. Debe de ser Texto o Fecha: YYYY-MM-DD o YYYY-MM-DD HH:MM:SS ")
+
+def iso_to_datetime(value_date: str | None):
+    if value_date:
+        return datetime.fromisoformat(value_date)
+    return None
 
 def get_month(date: date):
     MESES_ES = (
@@ -135,4 +139,3 @@ def to_excel(prefix_name, result):
                 logging.info(f"Guardado {chunk_path} con {current_row_count} registros (Último archivo).")
     zip_buffer.seek(0)
     return zip_buffer
-    

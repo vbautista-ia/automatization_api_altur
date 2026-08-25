@@ -2,7 +2,7 @@ from datetime import datetime
 import logging
 import os
 
-from configuration.platforms import Platforms
+from config.platforms import Platforms
 from repository.messages_repository import MessagesRepository
 
 

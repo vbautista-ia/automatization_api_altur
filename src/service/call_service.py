@@ -8,9 +8,9 @@ import zipfile
 import httpx
 import pandas as pd
 
-from answered_by import AnsweredBy
-from configuration.bots import Bots
-from configuration.platforms import Platforms
+from models.call import AnsweredBy
+from config.bots import Bots
+from config.platforms import Platforms
 from repository.call_repository import CallRepository
 from repository.campaigns_repository import CampaignRepository
 from utils.utils import get_bots_by_paltform, get_bots_contains, get_bots_start_with, to_date_iso

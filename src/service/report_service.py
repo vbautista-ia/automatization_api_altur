@@ -7,9 +7,9 @@ import time
 import httpx
 import pandas as pd
 
-from answered_by import AnsweredBy
-from configuration.bots import Bots
-from configuration.platforms import Platforms
+from models.call import AnsweredBy
+from config.bots import Bots
+from config.platforms import Platforms
 from repository.campaigns_repository import CampaignRepository
 from utils.utils import get_bots_by_paltform, get_bots_contains, get_bots_start_with, get_month, to_date_iso, to_excel, to_row_excel
 
