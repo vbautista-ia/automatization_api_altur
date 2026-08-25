@@ -11,10 +11,12 @@ services:
     restart: always
     environment:
       - PYTHONUNBUFFERED=1
+      - HOST_DB=postgres_db
     env_file:
       - .env
     depends_on:
-      - postgres_db
+      postgres_db:
+        condition: service_healthy
     networks:
       - red_docker
   
@@ -32,6 +34,12 @@ services:
       - postgres_data:/var/lib/postgresql/data
     networks:
       - red_docker
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${USER_DB} -d ${NAME_DB}"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+      start_period: 5s
 
 networks:
   red_docker:
