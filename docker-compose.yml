@@ -12,6 +12,7 @@ services:
     environment:
       - PYTHONUNBUFFERED=1
       - HOST_DB=postgres_db
+      - TZ=America/Mexico_City
     env_file:
       - .env
     depends_on:
@@ -28,6 +29,7 @@ services:
       - POSTGRES_USER=${USER_DB}
       - POSTGRES_PASSWORD=${PASS_DB}
       - POSTGRES_DB=${NAME_DB}
+      - TZ=America/Mexico_City
     ports:
       - "${PORT_DB}:5432"
     volumes:
