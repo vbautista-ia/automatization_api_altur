@@ -86,13 +86,15 @@ class DataImporterService:
                                     'type': call.get('type'),
                                     'status': call.get('status'),
                                     'answered_by': call.get('answered_by'),
-                                    'create_at': iso_to_datetime(call.get('create_at')),
+                                    'create_at': iso_to_datetime(call.get('created_at')),
                                     'started_at': iso_to_datetime(call.get('started_at')),
                                     'ended_at': iso_to_datetime(call.get('ended_at')),
                                     'ended_by': call.get('ended_by') or None,
                                     'ended_reason': call.get('ended_reason'),
                                     'duration': call.get('duration'),
                                     'billed_duration': call.get('billed_duration'),
+                                    'extracted_data': call.get('extracted_data'),
+                                    'tags': call.get('tags'),
                                     'campaign_id': campaign_id,
                                     'contact_id': call.get('contact', {}).get('id')
                                 } for call in calls]

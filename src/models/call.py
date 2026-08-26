@@ -1,7 +1,8 @@
 from datetime import datetime
 import enum
+from typing import Any
 
-from sqlalchemy import ForeignKey
+from sqlalchemy import JSON, DateTime, ForeignKey
 from sqlalchemy import Enum as SQLEnum
 
 from config.database import Base
@@ -33,13 +34,16 @@ class Call(Base):
     type: Mapped[str]
     status: Mapped[StatusCall] = mapped_column(SQLEnum(StatusCall, native_enum=False))
     answered_by: Mapped[AnsweredBy] = mapped_column(SQLEnum(AnsweredBy, native_enum=False))
-    create_at: Mapped[datetime | None]
-    started_at: Mapped[datetime | None]
-    ended_at: Mapped[datetime | None]
+    create_at: Mapped[datetime | None] = mapped_column(DateTime(True))
+    started_at: Mapped[datetime | None] = mapped_column(DateTime(True))
+    ended_at: Mapped[datetime | None] = mapped_column(DateTime(True))
     ended_by: Mapped[EndedBy | None] = mapped_column(SQLEnum(EndedBy, native_enum=False))
     ended_reason: Mapped[str]
     duration: Mapped[int]
     billed_duration: Mapped[int]
+    
+    extracted_data: Mapped[dict[str, Any]] = mapped_column(type_=JSON)
+    tags: Mapped[list[str]] = mapped_column(type_=JSON)
     
     campaign_id: Mapped[int] = mapped_column(ForeignKey('campaigns.id'))
     campaign_belonging: Mapped["Campaign"] = relationship(back_populates='calls')
