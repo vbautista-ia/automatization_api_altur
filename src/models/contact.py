@@ -2,7 +2,7 @@ from datetime import datetime
 import enum
 from typing import Any
 
-from sqlalchemy import JSON, ForeignKey
+from sqlalchemy import JSON, DateTime, ForeignKey
 from sqlalchemy import Enum as SQLEnum
 
 from config.database import Base
@@ -35,7 +35,7 @@ class Contact(Base):
     has_follow_up: Mapped[bool]
     call_count: Mapped[int]
     billed_duration: Mapped[int]
-    last_call_at: Mapped[datetime | None]
+    last_call_at: Mapped[datetime | None] = mapped_column(DateTime(True))
     
     extracted_data: Mapped[dict[str, Any]] = mapped_column(type_=JSON)
     tags: Mapped[list[str]] = mapped_column(type_=JSON)

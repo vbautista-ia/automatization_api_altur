@@ -4,7 +4,7 @@ import enum
 from config.database import Base
 
 from sqlalchemy.orm import Mapped, mapped_column, relationship
-from sqlalchemy import Enum as SQLEnum
+from sqlalchemy import DateTime, Enum as SQLEnum
 
 
 class StatusCampaign(enum.Enum):
@@ -26,9 +26,9 @@ class Campaign(Base):
     name: Mapped[str]
     description: Mapped[str]
     status: Mapped[StatusCampaign] = mapped_column(SQLEnum(StatusCampaign, native_enum=False))
-    created_at: Mapped[datetime]
-    started_at: Mapped[datetime | None]
-    ended_at: Mapped[datetime | None]
+    created_at: Mapped[datetime] = mapped_column(DateTime(True))
+    started_at: Mapped[datetime | None] = mapped_column(DateTime(True))
+    ended_at: Mapped[datetime | None] = mapped_column(DateTime(True))
 
     agent: Mapped[str]
 
