@@ -24,21 +24,29 @@ class DataImporterService:
             while has_next_campaigns:
                 campaigns_response = await self.__campaign_repository.list_campigns(client, started_after=start, started_before=end, cursor=cursor)
                 campaigns = campaigns_response.get('campaigns')
+                
                 if campaigns:
-                    data_campaigns = [{
-                        'id': campaign.get('id'),
-                        'name': campaign.get('name', ''),
-                        'description': campaign.get('description', ''),
-                        'status': campaign.get('status'),
-                        'created_at': iso_to_datetime(campaign.get('created_at')),
-                        'started_at': iso_to_datetime(campaign.get('started_at')),
-                        'ended_at': iso_to_datetime(campaign.get('ended_at')),
-                        'agent': campaign.get('agent', {}).get('name', ''),
-                        'timezone': campaign.get('timezone', ''),
-                        'retries': campaign.get('retries'),
-                        'archived': campaign.get('archived'),
-                        'first_message': campaign.get('first_message', '')
-                    } for campaign in campaigns]
+                    data_campaigns = []
+                    for campaign in campaigns:
+                        campaign_id = campaign.get('id')
+                        retrive_campaign = await self.__campaign_repository.retrive_campign(client, campaign_id)
+                        agent_id = retrive_campaign.get('campaign', {}).get('agent', {}).get('id')
+                        
+                        data_campaigns.append({
+                            'id': campaign.get('id'),
+                            'name': campaign.get('name', ''),
+                            'description': campaign.get('description', ''),
+                            'status': campaign.get('status'),
+                            'created_at': iso_to_datetime(campaign.get('created_at')),
+                            'started_at': iso_to_datetime(campaign.get('started_at')),
+                            'ended_at': iso_to_datetime(campaign.get('ended_at')),
+                            'agent': campaign.get('agent', {}).get('name', ''),
+                            'agent_id': agent_id,
+                            'timezone': campaign.get('timezone', ''),
+                            'retries': campaign.get('retries'),
+                            'archived': campaign.get('archived'),
+                            'first_message': campaign.get('first_message', '')
+                        })
                     
                     self.__data_epository.insert(data_campaigns, 'campaings')
                     

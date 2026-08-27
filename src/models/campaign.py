@@ -31,6 +31,7 @@ class Campaign(Base):
     ended_at: Mapped[datetime | None] = mapped_column(DateTime(True))
 
     agent: Mapped[str]
+    agent_id: Mapped[str | None]
 
     timezone: Mapped[str]
     retries: Mapped[int]
