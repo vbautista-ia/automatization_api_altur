@@ -29,7 +29,7 @@ class Contact(Base):
     f_id: Mapped[str]
     name: Mapped[str]
     contact: Mapped[str]
-    status: Mapped[StatusContact] = mapped_column(SQLEnum(StatusContact, native_enum=False))
+    status: Mapped[StatusContact] = mapped_column(SQLEnum(StatusContact, native_enum=False, values_callable=lambda obj: [e.value for e in obj]))
     context: Mapped[str]
     retries: Mapped[int]
     has_follow_up: Mapped[bool]
