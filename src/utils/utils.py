@@ -76,19 +76,23 @@ def to_excel(prefix_name, result):
     logging.info("<<<<<<<<<< Save in excel flile >>>>>>>>>>")
     df = pd.DataFrame(result)
     
-    tags_df = df['tags'].str.join('|').str.get_dummies()
-    tags_df = tags_df.astype(bool).astype(str)
-    df = df.join(tags_df)
-    df = df.drop(columns=['tags'])
+    if 'last_update' in df.columns:
+        df['last_update'] = pd.to_datetime(df['last_update']).dt.tz_localize(None)
     
-    df['follow_up'] = df['follow_up'].astype(str)    
+    if 'tags' in df.columns:
+        tags_df = df['tags'].apply(lambda x: x if isinstance(x, list) else [])
+        tags_df = df['tags'].str.join('|').str.get_dummies()
+        tags_df = tags_df.astype(bool).astype(str)
+        df = df.join(tags_df).drop(columns=['tags'])
     
-    diccionarios = df['extracted_data'].apply(lambda x: x if isinstance(x, dict) else {})
-    extracted_df = pd.DataFrame(diccionarios.tolist(), index=df.index)
-    extracted_df = extracted_df.fillna("").astype(str)
+    if 'follow_up' in df.columns:
+        df['follow_up'] = df['follow_up'].astype(str)   
     
-    df = df.join(extracted_df)
-    df = df.drop(columns=['extracted_data'])
+    if 'extracted_data' in df.columns:
+        diccionarios = df['extracted_data'].apply(lambda x: x if isinstance(x, dict) else {})
+        extracted_df = pd.DataFrame(diccionarios.tolist(), index=df.index)
+        extracted_df = extracted_df.fillna("").astype(str)
+        df = df.join(extracted_df).drop(columns=['extracted_data'])
 
     file_name_base = f"{prefix_name}_contacts_mult_camp"
     zip_buffer = io.BytesIO()
@@ -119,7 +123,7 @@ def to_excel(prefix_name, result):
                     
                     chunk_excel_buffer = io.BytesIO()
                     chunk_to_save.to_excel(chunk_excel_buffer, sheet_name='contacts', index=False, engine='openpyxl')
-                    zip_file.writestr(chunk_path, excel_buffer.getvalue())
+                    zip_file.writestr(chunk_path, chunk_excel_buffer.getvalue())
                     logging.info(f"Guardado {chunk_path} con {current_row_count} registros.")
                     
                     current_chunk_dfs = []

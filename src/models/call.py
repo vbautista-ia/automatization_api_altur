@@ -32,12 +32,12 @@ class Call(Base):
     
     id: Mapped[str] = mapped_column(primary_key=True, autoincrement=False, index=True)
     type: Mapped[str]
-    status: Mapped[StatusCall] = mapped_column(SQLEnum(StatusCall, native_enum=False))
-    answered_by: Mapped[AnsweredBy] = mapped_column(SQLEnum(AnsweredBy, native_enum=False))
+    status: Mapped[StatusCall] = mapped_column(SQLEnum(StatusCall, native_enum=False, values_callable=lambda obj: [e.value for e in obj]))
+    answered_by: Mapped[AnsweredBy] = mapped_column(SQLEnum(AnsweredBy, native_enum=False, values_callable=lambda obj: [e.value for e in obj]))
     create_at: Mapped[datetime | None] = mapped_column(DateTime(True))
     started_at: Mapped[datetime | None] = mapped_column(DateTime(True))
     ended_at: Mapped[datetime | None] = mapped_column(DateTime(True))
-    ended_by: Mapped[EndedBy | None] = mapped_column(SQLEnum(EndedBy, native_enum=False))
+    ended_by: Mapped[EndedBy | None] = mapped_column(SQLEnum(EndedBy, native_enum=False, values_callable=lambda obj: [e.value for e in obj]))
     ended_reason: Mapped[str]
     duration: Mapped[int]
     billed_duration: Mapped[int]

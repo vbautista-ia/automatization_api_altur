@@ -51,11 +51,10 @@ class CampaignRepository:
                 logging.warning(f"Error Retrive {response.status_code}, message: {response.text}. {response.url}")
         return {}
 
-    def retrive_campign(self, id_campaign: str):
+    async def retrive_campign(self, client: httpx.AsyncClient, id_campaign: str):
         url = f"{self.URL_BASE}{self.RETRIVE_CAMPAING.format(id=id_campaign)}"
 
-        response = requests.get(url, headers=self.HEADERS)
-        logging.info(f"Get campaigns: {response.url}")
+        response = await client.get(url, headers=self.HEADERS)
 
         if response.status_code == 200:
             return response.json()

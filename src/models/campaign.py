@@ -25,12 +25,13 @@ class Campaign(Base):
     id: Mapped[int] = mapped_column(primary_key=True, autoincrement=False, index=True)
     name: Mapped[str]
     description: Mapped[str]
-    status: Mapped[StatusCampaign] = mapped_column(SQLEnum(StatusCampaign, native_enum=False))
+    status: Mapped[StatusCampaign] = mapped_column(SQLEnum(StatusCampaign, native_enum=False, values_callable=lambda obj: [e.value for e in obj]))
     created_at: Mapped[datetime] = mapped_column(DateTime(True))
     started_at: Mapped[datetime | None] = mapped_column(DateTime(True))
     ended_at: Mapped[datetime | None] = mapped_column(DateTime(True))
 
     agent: Mapped[str]
+    agent_id: Mapped[str | None]
 
     timezone: Mapped[str]
     retries: Mapped[int]
