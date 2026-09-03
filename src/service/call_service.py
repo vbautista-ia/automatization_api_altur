@@ -111,6 +111,18 @@ class CallService:
         
         zip_buffer.seek(0)
         return zip_buffer
+    
+    async def download_calls_by_id(self, calls: list[str]):
+            zip_buffer = io.BytesIO()
+
+            with zipfile.ZipFile(zip_buffer, 'w', zipfile.ZIP_DEFLATED) as zip_file:
+                async with httpx.AsyncClient(timeout=30.0) as client:
+                    for call in calls:
+                        response = await self.call_repository.retrive_call_recording(call, client)
+                        if response.status_code == 200:
+                            zip_file.writestr(f"{call}.mp3", response.content)
+            zip_buffer.seek(0)
+            return zip_buffer
 
     def download_recording(self, id, name_file, path_download, id_bot):
         recording = self.call_repository.retrive_call_recording(id)
