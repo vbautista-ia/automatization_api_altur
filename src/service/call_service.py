@@ -8,12 +8,12 @@ import zipfile
 import httpx
 import pandas as pd
 
-from answered_by import AnsweredBy
-from configuration.bots import Bots
-from configuration.platforms import Platforms
+from models.call import AnsweredBy
+from config.bots import Bots
+from config.platforms import Platforms
 from repository.call_repository import CallRepository
 from repository.campaigns_repository import CampaignRepository
-from utils.utils import get_bots_by_paltform, get_bots_start_with, to_date_iso
+from utils.utils import get_bots_by_paltform, get_bots_contains, get_bots_start_with, to_date_iso
 
 class MaxRecordsReached(Exception):
     pass
@@ -25,11 +25,12 @@ class CallService:
         self.call_repository = CallRepository(self.PLATFORM)
         self.campaign_repository = CampaignRepository(self.PLATFORM)
 
-    async def download(self, input_start, input_end, tag, segmento, max_records = 5):
+    async def download(self, input_start, input_end, tag, segmento, max_records = 5, content: str = None):
         start = to_date_iso(input_start)
         end = to_date_iso(input_end)
         bots = get_bots_by_paltform(self.PLATFORM)
-        agents_search = get_bots_start_with(bots, segmento)
+        agents = get_bots_start_with(bots, segmento)
+        agents_search = get_bots_contains(agents, content)
 
         zip_buffer = io.BytesIO()
         info_call = {
@@ -110,6 +111,18 @@ class CallService:
         
         zip_buffer.seek(0)
         return zip_buffer
+    
+    async def download_calls_by_id(self, calls: list[str]):
+            zip_buffer = io.BytesIO()
+
+            with zipfile.ZipFile(zip_buffer, 'w', zipfile.ZIP_DEFLATED) as zip_file:
+                async with httpx.AsyncClient(timeout=30.0) as client:
+                    for call in calls:
+                        response = await self.call_repository.retrive_call_recording(call, client)
+                        if response:
+                            zip_file.writestr(f"{call}.mp3", response.content)
+            zip_buffer.seek(0)
+            return zip_buffer
 
     def download_recording(self, id, name_file, path_download, id_bot):
         recording = self.call_repository.retrive_call_recording(id)

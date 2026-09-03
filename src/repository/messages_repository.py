@@ -1,15 +1,15 @@
 import logging
 import requests
 
-from configuration.config import get_api_key
-from configuration.platforms import Platforms
+from config.enviroments import START_ENV, get_env
+from config.platforms import Platforms
 
 
 class MessagesRepository:
     URL_THREAD = 'https://api.altur.io/api/v1.0/message/THREAD_ID'
 
     def __init__(self, platform: Platforms):
-        self.TOKEN = get_api_key(platform)
+        self.TOKEN = get_env(f"{START_ENV}{platform.name}")
         self.HEADERS = { 'Authorization': f'api-key {self.TOKEN}'}
 
     def get_messages(self, id):
