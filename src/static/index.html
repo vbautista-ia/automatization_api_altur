@@ -46,9 +46,9 @@
         </div>
     </div>
 
-    <div class="card shadow-sm">
+    <div class="card shadow-sm mb-5">
         <div class="card-header bg-success text-white">
-            <h4 class="mb-0">Descarga de Llamadas</h4>
+            <h4 class="mb-0">Descarga de Llamadas (Filtros)</h4>
         </div>
         <div class="card-body">
             <form id="formCalls" onsubmit="descargarLlamadas(event)">
@@ -85,10 +85,6 @@
                             <option value="RTG_">RTG_</option>
                         </select>
                     </div>
-                    <div class="col-md-4">
-                        <label class="form-label">Producto <span class="text-muted">(Opcional)</span></label>
-                        <input type="text" class="form-control" name="product" placeholder="Ej. Hipotecario">
-                    </div>
                     <div class="col-md-3">
                         <label class="form-label">Máx. Registros</label>
                         <input type="number" class="form-control" name="max_records" value="5" min="1" required>
@@ -96,6 +92,36 @@
                 </div>
                 <div class="mt-4 text-end">
                     <button type="submit" class="btn btn-success">Descargar Llamadas (.zip)</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <div class="card shadow-sm">
+        <div class="card-header bg-dark text-white">
+            <h4 class="mb-0">Descarga de Llamadas por Lista de IDs</h4>
+        </div>
+        <div class="card-body">
+            <form id="formCallsById" onsubmit="descargarLlamadasPorId(event)">
+                <div class="row g-3">
+                    <div class="col-md-4">
+                        <label class="form-label">Plataforma</label>
+                        <select class="form-select" name="plataforma" required>
+                            <option value="">Selecciona una opción</option>
+                            <option value="BBVA_COBRANZA">BBVA_COBRANZA</option>
+                            <option value="BBVA_RETARGETING">BBVA_RETARGETING</option>
+                        </select>
+                    </div>
+                    <div class="col-md-8">
+                        <label class="form-label">Lista de IDs de Llamadas</label>
+                        <textarea class="form-control" name="calls" rows="4" placeholder='Ejemplo:&#10;["cll_Dplo...", "cll_KloC..."]&#10;O también: cll_Dplo, cll_KloC' required></textarea>
+                        <div class="form-text">
+                            Puedes pegar el arreglo de JSON directamente, o una lista separada por comas, espacios o saltos de línea (como copiando desde un Excel).
+                        </div>
+                    </div>
+                </div>
+                <div class="mt-4 text-end">
+                    <button type="submit" class="btn btn-dark">Descargar Llamadas por ID (.zip)</button>
                 </div>
             </form>
         </div>
@@ -114,13 +140,8 @@
 <script>
     const loadingOverlay = document.getElementById('loadingOverlay');
 
-    function mostrarLoader() {
-        loadingOverlay.classList.remove('d-none');
-    }
-
-    function ocultarLoader() {
-        loadingOverlay.classList.add('d-none');
-    }
+    function mostrarLoader() { loadingOverlay.classList.remove('d-none'); }
+    function ocultarLoader() { loadingOverlay.classList.add('d-none'); }
 
     function formatearFechaISO(fechaInput) {
         let fecha = fechaInput.replace('T', ' ');
@@ -130,20 +151,43 @@
         return fecha;
     }
 
-    async function procesarDescarga(formId, baseUrl, nombreArchivoPorDefecto) {
+    async function procesarBlobDescarga(response, nombreArchivoPorDefecto) {
+        let filename = nombreArchivoPorDefecto;
+        const disposition = response.headers.get('Content-Disposition');
+        if (disposition && disposition.indexOf('filename=') !== -1) {
+            const matches = /filename="([^"]+)"/.exec(disposition);
+            if (matches != null && matches[1]) {
+                filename = matches[1];
+            }
+        }
+
+        const blob = await response.blob();
+        const downloadUrl = window.URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.style.display = 'none';
+        a.href = downloadUrl;
+        a.download = filename;
+        document.body.appendChild(a);
+        
+        a.click();
+        
+        window.URL.revokeObjectURL(downloadUrl);
+        document.body.removeChild(a);
+    }
+
+    async function procesarDescargaGET(formId, baseUrl, nombreArchivoPorDefecto) {
         const form = document.getElementById(formId);
         const formData = new FormData(form);
         
         const startVal = formData.get('input_start');
         const endVal = formData.get('input_end');
         
-        if (new Date(startVal) > new Date(endVal)) {
+        if (startVal && endVal && new Date(startVal) > new Date(endVal)) {
             alert("Error: La fecha de inicio no puede ser mayor que la fecha de fin.");
             return;
         }
 
         const params = new URLSearchParams();
-
         for (const [key, value] of formData.entries()) {
             if (value.trim() !== '') {
                 if (key === 'input_start' || key === 'input_end') {
@@ -157,41 +201,67 @@
         const finalUrl = `${baseUrl}?${params.toString()}`.replaceAll('+', ' ');
 
         mostrarLoader();
-
         try {
-            const response = await fetch(finalUrl, {
-                method: 'GET'
-            });
+            const response = await fetch(finalUrl, { method: 'GET' });
 
-            if (!response.ok) {
-                throw new Error(`Error en el servidor: ${response.status}`);
-            }
-
-            let filename = nombreArchivoPorDefecto;
-            const disposition = response.headers.get('Content-Disposition');
-            if (disposition && disposition.indexOf('filename=') !== -1) {
-                const matches = /filename="([^"]+)"/.exec(disposition);
-                if (matches != null && matches[1]) {
-                    filename = matches[1];
-                }
-            }
-
-            const blob = await response.blob();
-            const downloadUrl = window.URL.createObjectURL(blob);
-            const a = document.createElement('a');
-            a.style.display = 'none';
-            a.href = downloadUrl;
-            a.download = filename;
-            document.body.appendChild(a);
+            if (!response.ok) throw new Error(`Error en el servidor: ${response.status}`);
             
-            a.click();
-            
-            window.URL.revokeObjectURL(downloadUrl);
-            document.body.removeChild(a);
+            await procesarBlobDescarga(response, nombreArchivoPorDefecto);
 
         } catch (error) {
             console.error("Error al descargar:", error);
-            alert("Ocurrió un error al intentar descargar el archivo. Revisa la consola para más detalles.");
+            alert("Ocurrió un error al intentar descargar el archivo.");
+        } finally {
+            ocultarLoader();
+        }
+    }
+
+    // --- PROCESAR PETICIÓN POST (Nuevo endpoint por ID) ---
+    async function descargarLlamadasPorId(e) {
+        e.preventDefault();
+        const form = document.getElementById('formCallsById');
+        const formData = new FormData(form);
+
+        const plataforma = formData.get('plataforma');
+        const textCalls = formData.get('calls');
+
+        const callsArray = textCalls
+            .replace(/[\[\]"']/g, '') 
+            .split(/[\s,]+/)
+            .filter(id => id.trim() !== '');
+
+        if (callsArray.length === 0) {
+            alert("Por favor ingresa al menos un ID válido.");
+            return;
+        }
+
+        const finalUrl = `/call/download/by/id?plataforma=${encodeURIComponent(plataforma)}`;
+
+        mostrarLoader();
+        try {
+            const response = await fetch(finalUrl, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify(callsArray)
+            });
+
+            if (!response.ok) {
+                let errorMsg = `Error en el servidor: ${response.status}`;
+                try {
+                    const errorObj = await response.json();
+                    if(errorObj.detail) errorMsg = errorObj.detail;
+                } catch(e) {}
+                alert(errorMsg);
+                return;
+            }
+
+            await procesarBlobDescarga(response, 'grabaciones_por_id.zip');
+
+        } catch (error) {
+            console.error("Error al descargar por ID:", error);
+            alert("Ocurrió un error al intentar descargar el archivo.");
         } finally {
             ocultarLoader();
         }
@@ -199,12 +269,12 @@
 
     function descargarReporte(e) {
         e.preventDefault();
-        procesarDescarga('formContacts', '/report/contacts', 'report_contacts.zip');
+        procesarDescargaGET('formContacts', '/report/contacts', 'report_contacts.zip');
     }
 
     function descargarLlamadas(e) {
         e.preventDefault();
-        procesarDescarga('formCalls', '/call/download/', 'grabaciones.zip');
+        procesarDescargaGET('formCalls', '/call/download/', 'grabaciones.zip');
     }
 </script>
 
