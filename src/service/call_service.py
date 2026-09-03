@@ -119,7 +119,7 @@ class CallService:
                 async with httpx.AsyncClient(timeout=30.0) as client:
                     for call in calls:
                         response = await self.call_repository.retrive_call_recording(call, client)
-                        if response.status_code == 200:
+                        if response:
                             zip_file.writestr(f"{call}.mp3", response.content)
             zip_buffer.seek(0)
             return zip_buffer
