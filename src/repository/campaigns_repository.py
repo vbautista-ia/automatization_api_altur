@@ -88,7 +88,7 @@ class CampaignRepository:
                 logging.warning(f"Error {response.status_code}, message: {response.text}. {response.url}")
         return {}
 
-    async def get_campaign_calls(self, client: httpx.AsyncClient, id_campaign, pageIndex: int, startDate = None, endDate = None, pageSize = 100, answeredBy: AnsweredBy = None, status: StatusCall = None):
+    async def get_campaign_calls(self, client: httpx.AsyncClient, id_campaign, pageIndex: int = 100, startDate = None, endDate = None, pageSize = 100, answeredBy: AnsweredBy = None, status: StatusCall = None):
         params = {
             'answeredBy': answeredBy.value if answeredBy else None,
             'startDate': startDate,

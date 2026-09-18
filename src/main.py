@@ -6,6 +6,7 @@ from fastapi.responses import FileResponse
 from controller.report_controller import router as router_report 
 from controller.campaign_controller import router as router_campaign 
 from controller.call_controller import call_router
+from controller.messages_controller import messages_router
 
 
 logging.basicConfig(
@@ -19,6 +20,7 @@ app = FastAPI()
 app.include_router(router=router_report)
 app.include_router(router=router_campaign)
 app.include_router(router=call_router)
+app.include_router(router=messages_router)
 
 @app.get('/', )
 async def index():

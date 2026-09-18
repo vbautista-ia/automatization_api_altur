@@ -16,19 +16,19 @@ class CallAssetsService:
         self.call_repository = CallRepository(platform)
         self.PLATFORM = platform
     
-    def  download_resourses_by_id_call(self, calls:list):
-        bots = Bots[self.PLATFORM.name].value
-        for call_id in calls:
-            call = self.call_repository.retive_call(call_id)
+    # def  download_resourses_by_id_call(self, calls:list):
+    #     bots = Bots[self.PLATFORM.name].value
+    #     for call_id in calls:
+    #         call = self.call_repository.retive_call(call_id)
             
-            campaign = bots[call['thread']['agent']['id']]
-            end_user = call['thread']['enduser']['display_name']
-            path = f"{campaign}/{end_user}"
+    #         campaign = bots[call['thread']['agent']['id']]
+    #         end_user = call['thread']['enduser']['display_name']
+    #         path = f"{campaign}/{end_user}"
             
-            time.sleep(0.1)
-            self.call_service.download_recording(call_id, call['id'], path)
+    #         time.sleep(0.1)
+    #         self.call_service.download_recording(call_id, call['id'], path)
             
-            time.sleep(0.1)
-            self.messages_service.get_transciption(call['thread']['id'], path)
-        logging.info('Downloads complete')
+    #         time.sleep(0.1)
+    #         self.messages_service.get_transciption(call['thread']['id'], path)
+    #     logging.info('Downloads complete')
 
