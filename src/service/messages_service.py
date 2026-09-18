@@ -100,7 +100,7 @@ class MessagesService:
                                             thread_id = call['thread_id']
                                             transcription = await self.get_transciption(thread_id, client, started_at, ended_at)
                                             if transcription:
-                                                zip_file.writestr(f"{path}/{thread_id}.txt", transcription)
+                                                zip_file.writestr(f"{path}/{call['id']}.txt", transcription)
                                                 
                                                 info_call['id'].append(call['id'])
                                                 info_call['thread_id'].append(thread_id)
