@@ -1,5 +1,7 @@
+import asyncio
 import logging
-import requests
+import re
+import httpx
 
 from config.enviroments import START_ENV, get_env
 from config.platforms import Platforms
@@ -12,10 +14,16 @@ class MessagesRepository:
         self.TOKEN = get_env(f"{START_ENV}{platform.name}")
         self.HEADERS = { 'Authorization': f'api-key {self.TOKEN}'}
 
-    def get_messages(self, id):
+    async def get_messages(self, id, client: httpx.AsyncClient):
         url = self.URL_THREAD.replace('THREAD_ID', id)
         try:
-            response = requests.get(url, headers=self.HEADERS)
+            response = await client.get(url, headers=self.HEADERS)
+            
+            if response.status_code == 429:
+                seconds = re.search(r"(\d+)\s*seconds", response.json()['detail'])
+                if seconds:
+                    await asyncio.sleep(float(seconds.group(1)))
+                    response = await client.get(url, headers=self.HEADERS)
  
             if response.status_code == 200:
                 return response.json()

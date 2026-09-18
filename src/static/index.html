@@ -96,8 +96,8 @@
             </form>
         </div>
     </div>
-
-    <div class="card shadow-sm">
+    
+    <div class="card shadow-sm mb-5">
         <div class="card-header bg-dark text-white">
             <h4 class="mb-0">Descarga de Llamadas por Lista de IDs</h4>
         </div>
@@ -126,7 +126,44 @@
             </form>
         </div>
     </div>
+
+    <div class="card shadow-sm mb-5">
+        <div class="card-header bg-success text-white">
+            <h4 class="mb-0">Descarga de Transcripciones</h4>
+        </div>
+        <div class="card-body">
+            <form id="formTranscriptions" onsubmit="descargarTranscripciones(event)">
+                <div class="row g-3">
+                    <div class="col-md-6">
+                        <label class="form-label">Fecha Inicio</label>
+                        <input type="datetime-local" step="1" class="form-control" name="input_start" required>
+                    </div>
+                    <div class="col-md-6">
+                        <label class="form-label">Fecha Fin</label>
+                        <input type="datetime-local" step="1" class="form-control" name="input_end" required>
+                    </div>
+    
+                    <div class="col-md-3">
+                        <label class="form-label">Segmento</label>
+                        <select class="form-select" name="segmento" required>
+                            <option value="" disabled selected>-- Selecciona un segmento --</option>
+                            <option value="SPC_">SPC_</option>
+                            <option value="DESPACHO_">DESPACHO_</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                        <label class="form-label">Producto <span class="text-muted">(Opcional)</span></label>
+                        <input type="text" class="form-control" name="product" placeholder="Ej. Hipotecario">
+                    </div>
+                <div class="mt-4 text-end">
+                    <button type="submit" class="btn btn-success">Descargar Transcripciones</button>
+                </div>
+            </form>
+        </div>
+    </div>
 </div>
+
 
 <div id="loadingOverlay" class="d-none position-fixed top-0 start-0 w-100 h-100 bg-dark bg-opacity-75" style="z-index: 9999;">
     <div class="h-100 d-flex flex-column justify-content-center align-items-center">
@@ -276,6 +313,12 @@
         e.preventDefault();
         procesarDescargaGET('formCalls', '/call/download/', 'grabaciones.zip');
     }
+    
+    function descargarTranscripciones(e) {
+        e.preventDefault();
+        procesarDescargaGET('formTranscriptions', '/messages', 'transcripciones.zip');
+    }
+    
 </script>
 
 </body>
