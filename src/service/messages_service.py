@@ -1,3 +1,4 @@
+import asyncio
 from datetime import datetime
 import io
 import logging
@@ -98,6 +99,7 @@ class MessagesService:
                                             started_at = iso_to_datetime(call['started_at'])
                                             ended_at = iso_to_datetime(call['ended_at'])
                                             thread_id = call['thread_id']
+                                            asyncio.sleep(0.1)
                                             transcription = await self.get_transciption(thread_id, client, started_at, ended_at)
                                             if transcription:
                                                 zip_file.writestr(f"{path}/{call['id']}.txt", transcription)
@@ -170,5 +172,5 @@ class MessagesService:
                     
             if len(lines) > 2:
                 return ''.join(lines)
-        logging.info(f"Not found messages in conversation: {conversation}")
+        logging.info(f"Not found messages in conversation: {thread_id}")
         return None
