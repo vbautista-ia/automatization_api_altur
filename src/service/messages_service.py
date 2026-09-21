@@ -99,7 +99,7 @@ class MessagesService:
                                             started_at = iso_to_datetime(call['started_at'])
                                             ended_at = iso_to_datetime(call['ended_at'])
                                             thread_id = call['thread_id']
-                                            asyncio.sleep(0.1)
+                                            await asyncio.sleep(0.2)
                                             transcription = await self.get_transciption(thread_id, client, started_at, ended_at)
                                             if transcription:
                                                 zip_file.writestr(f"{path}/{call['id']}.txt", transcription)
