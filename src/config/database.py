@@ -39,3 +39,30 @@ def get_db():
         db.close()
 
 depend_db = Annotated[Session, Depends(get_db)]
+
+
+NUX_USER_DB = get_env('NUX_USER_DB')
+NUX_PASS_DB = get_env('NUX_PASS_DB')
+NUX_NAME_DB = get_env('NUX_NAME_DB')
+# NUX_PORT_DB = get_env('NUX_PORT_DB')
+NUX_HOST_DB = get_env('NUX_HOST_DB')
+NUX_DRIVER = get_env('NUX_DRIVER')
+SQLSERVER_URL = f"mssql+pyodbc://{NUX_USER_DB}:{NUX_PASS_DB}@{NUX_HOST_DB}/{NUX_NAME_DB}?driver={NUX_DRIVER}&ApplicationIntent=ReadOnly&TrustServerCertificate=yes"
+
+
+engine_sqlserver = create_engine(
+    SQLSERVER_URL,
+    pool_pre_ping=True,
+    pool_size=10,
+    max_overflow=20
+)
+SessionSQLServer = sessionmaker(autocommit=False, autoflush=False, bind=engine_sqlserver)
+
+def get_SqlServer():
+    db = SessionSQLServer()
+    try:
+        yield db
+    finally:
+        db.close()
+
+db_sqlserver = Annotated[Session, Depends(get_SqlServer)]

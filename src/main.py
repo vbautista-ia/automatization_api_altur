@@ -7,6 +7,8 @@ from controller.report_controller import router as router_report
 from controller.campaign_controller import router as router_campaign 
 from controller.call_controller import call_router
 from controller.messages_controller import messages_router
+from controller.nuxiba_controller import router as nuxiba_router
+
 
 
 logging.basicConfig(
@@ -21,6 +23,7 @@ app.include_router(router=router_report)
 app.include_router(router=router_campaign)
 app.include_router(router=call_router)
 app.include_router(router=messages_router)
+app.include_router(router=nuxiba_router)
 
 @app.get('/', )
 async def index():
