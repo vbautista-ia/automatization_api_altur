@@ -1,0 +1,53 @@
+services:
+  back_automatization:
+    build:
+      context: .
+      network: host
+    container_name: fastapi_server
+    ports:
+      - "80:8000"
+    restart: always
+    environment:
+      - PYTHONUNBUFFERED=1
+      - HOST_DB=postgres_db
+      - TZ=America/Mexico_City
+    env_file:
+      - .env
+    depends_on:
+      postgres_db:
+        condition: service_healthy
+    networks:
+      - red_docker
+  
+  postgres_db:
+    image: postgres:15-alpine
+    container_name: postgres_fastapi
+    restart: always
+    environment:
+      - POSTGRES_USER=${USER_DB}
+      - POSTGRES_PASSWORD=${PASS_DB}
+      - POSTGRES_DB=${NAME_DB}
+      - TZ=America/Mexico_City
+    ports:
+      - "${PORT_DB}:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    networks:
+      - red_docker
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${USER_DB} -d ${NAME_DB}"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+      start_period: 5s
+
+networks:
+  red_docker:
+    driver: bridge
+    ipam:
+      config:
+        - subnet: 10.222.0.0/24
+
+volumes:
+  postgres_data:
+      
