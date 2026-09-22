@@ -129,7 +129,7 @@
 
     <div class="card shadow-sm mb-5">
         <div class="card-header bg-success text-white">
-            <h4 class="mb-0">Descarga de Transcripciones</h4>
+            <h4 class="mb-0">Descarga de Transcripciones ALTUR</h4>
         </div>
         <div class="card-body">
             <form id="formTranscriptions" onsubmit="descargarTranscripciones(event)">
@@ -155,6 +155,42 @@
                 <div class="col-md-4">
                         <label class="form-label">Producto <span class="text-muted">(Opcional)</span></label>
                         <input type="text" class="form-control" name="product" placeholder="Ej. Hipotecario">
+                    </div>
+                <div class="mt-4 text-end">
+                    <button type="submit" class="btn btn-success">Descargar Transcripciones</button>
+                </div>
+            </form>
+        </div>
+    </div>
+   
+    <div class="card shadow-sm mb-5">
+        <div class="card-header bg-warning text-white">
+            <h4 class="mb-0">Descarga de Transcripciones NUXIBA</h4>
+        </div>
+        <div class="card-body">
+            <form id="formTranscriptionsNux" onsubmit="descargarTranscripcionesNux(event)">
+                <div class="row g-3">
+                    <div class="col-md-6">
+                        <label class="form-label">Fecha Inicio</label>
+                        <input type="datetime-local" step="1" class="form-control" name="start" required>
+                    </div>
+                    <div class="col-md-6">
+                        <label class="form-label">Fecha Fin</label>
+                        <input type="datetime-local" step="1" class="form-control" name="end" required>
+                    </div>
+    
+                    <div class="col-md-3">
+                        <label class="form-label">Segmento</label>
+                        <select class="form-select" name="campaign" required>
+                            <option value="" disabled selected>-- Selecciona un segmento --</option>
+                            <option value="SPC_">SPC</option>
+                            <option value="DESPACHO_">DESPACHO</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                        <label class="form-label">Duración <span class="text-muted">(Opcional)</span></label>
+                        <input type="number" class="form-control" name="min_duration" value="0" min="0">
                     </div>
                 <div class="mt-4 text-end">
                     <button type="submit" class="btn btn-success">Descargar Transcripciones</button>
@@ -216,8 +252,16 @@
         const form = document.getElementById(formId);
         const formData = new FormData(form);
         
-        const startVal = formData.get('input_start');
-        const endVal = formData.get('input_end');
+        let startVal = formData.get('input_start');
+        let endVal = formData.get('input_end');
+        
+        if (!startVal) {
+            startVal = formData.get('start')
+        }
+
+        if (!endVal) {
+            endVal = formData.get('end')
+        }
         
         if (startVal && endVal && new Date(startVal) > new Date(endVal)) {
             alert("Error: La fecha de inicio no puede ser mayor que la fecha de fin.");
@@ -227,7 +271,7 @@
         const params = new URLSearchParams();
         for (const [key, value] of formData.entries()) {
             if (value.trim() !== '') {
-                if (key === 'input_start' || key === 'input_end') {
+                if (key === 'input_start' || key === 'input_end' || key === 'start' || key === 'end') {
                     params.append(key, formatearFechaISO(value));
                 } else {
                     params.append(key, value);
@@ -241,13 +285,18 @@
         try {
             const response = await fetch(finalUrl, { method: 'GET' });
 
-            if (!response.ok) throw new Error(`Error en el servidor: ${response.status}`);
+            if (!response.ok) {
+                throw new Error(`Error en el servidor: ${response.status}`);
+            }
             
+            if (response.status === 204) {
+                throw new Error("No se encontraron llamadas o contactos en el rango seleccionado.");
+            }
             await procesarBlobDescarga(response, nombreArchivoPorDefecto);
 
         } catch (error) {
             console.error("Error al descargar:", error);
-            alert("Ocurrió un error al intentar descargar el archivo.");
+            alert(error.message);
         } finally {
             ocultarLoader();
         }
@@ -317,6 +366,11 @@
     function descargarTranscripciones(e) {
         e.preventDefault();
         procesarDescargaGET('formTranscriptions', '/messages', 'transcripciones.zip');
+    }
+    
+    function descargarTranscripcionesNux(e) {
+        e.preventDefault();
+        procesarDescargaGET('formTranscriptionsNux', '/nuxiba/transcript', 'transcripciones.zip');
     }
     
 </script>
