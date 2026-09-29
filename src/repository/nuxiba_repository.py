@@ -1,6 +1,6 @@
 import datetime
 
-from sqlalchemy import text
+from sqlalchemy import bindparam, text
 from sqlalchemy.orm import Session
 
 class NuxibaRepository:
@@ -44,3 +44,26 @@ class NuxibaRepository:
             print(e)
         
         return []
+    
+    def get_transcriptions_by_id(self, calls: tuple):
+        query = text("""
+                SELECT 
+                    cco.cal_id AS id, cco.totalCall_Time AS duration, cco.cal_Inicio AS start_at,
+                    ccodi.name_cal AS result,
+                    vdth.Campaña AS campaign, vdth.transcription 
+                FROM CCReportsRIA.dbo.ccoCallsOut cco
+                INNER JOIN CCReportsRIA.dbo.ccoCallsOutDispositionIA ccodi 
+                ON cco.cal_id = ccodi.call_id 
+                INNER JOIN CCenterRIA.dbo.view_Detalle_Transcripciones_History vdth 
+                ON cco.cal_id = vdth.cal_id 
+                WHERE
+                    cco.cal_id IN :calls
+        """).bindparams(bindparam('calls', expanding=True))
+        
+        try:
+            result = self.nux_db.execute(query, {'calls': calls})
+            return result.mappings().all()
+        except Exception as e:
+            print('Ocurrio un error')
+        return[]
+            

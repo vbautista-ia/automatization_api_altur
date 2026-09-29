@@ -414,3 +414,44 @@ class ReportService:
             
             month_report = get_month(datetime.fromisoformat(start).date())
             return await asyncio.to_thread(to_excel, month_report, result)
+        
+    
+    async def get_report_cantacts_api(self, date_start:str, date_end:str, agent_start_with:str = None, content: str = None):
+        bots = get_bots_by_paltform(self.PLATFORM)
+        agents = get_bots_start_with(bots, agent_start_with)
+        agents = get_bots_contains(agents, content)
+        
+        start = to_date_iso(date_start)
+        end = to_date_iso(date_end)
+        result = []
+        
+        async with httpx.AsyncClient(timeout=30.0) as client:
+            for agent, name_agent in agents.items():
+                has_next = True
+                cursor = None
+                
+                while has_next:    
+                    list_campaigns = await self.campaign_repository.list_campigns(client=client, started_after=start, started_before=end, cursor=cursor, agentId=agent)
+                    campaigns = list_campaigns.get('campaigns')
+                    if campaigns:
+                        for campaign in campaigns:
+                            page_index = 0
+                            has_next_contacts = True
+                    
+                            while has_next_contacts:
+                                retrieved_calls = await self.campaign_repository.list_campaign_contacts(client=client, id_campaign=campaign['id'], pageIndex=page_index)
+                                contacts = retrieved_calls.get('contacts')
+                    
+                                if contacts:
+                                    result.extend([to_row_excel(campaign, call) for call in contacts])
+                                has_next_contacts = retrieved_calls.get('pagination', {}).get('has_next', False)
+                                page_index += 1
+                    
+                    has_next = list_campaigns.get('pagination', {}).get('has_next', False)
+                    cursor = list_campaigns.get('pagination', {}).get('next_cursor')
+            
+            if len(result) > 0:
+                month_report = get_month(datetime.fromisoformat(start).date())
+                return await asyncio.to_thread(to_excel, month_report, result)
+            else:
+                logging.info('Calls not found')

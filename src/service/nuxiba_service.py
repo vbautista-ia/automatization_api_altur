@@ -61,6 +61,51 @@ class NuxibaService:
             
             zip_buffer.seek(0)
             return zip_buffer
+        
+    async def download_transcript_by_id(self, calls: list[str]):
+        if not calls:
+            return None
+        
+        params = tuple(calls)
+        response = self.repository.get_transcriptions_by_id(params)
+        
+        if response:    
+            zip_buffer = io.BytesIO()
+            info_call = {
+                'id': [],
+                'campaign': [],
+                'start_at': [],
+                'duration': [],
+                'result': [],
+            }
+
+            with zipfile.ZipFile(zip_buffer, 'w', zipfile.ZIP_DEFLATED) as zip_file:
+                for row in response:
+                    transcription = row.get('transcription', {})
+                    
+                    if transcription:
+                        messages = json.loads(transcription).get('transcript', [])
+                        client, product = self.__extraer_cliente_producto(row['campaign'])
+                        tag = row['result']
+                        if not tag:
+                            tag = 'SIN CLASIFICACION'
+                        
+                        id_call = row['id']
+                        start_transcript = row['start_at']
+                        
+                        info_call['id'].append(id_call)
+                        info_call['campaign'].append(product)          
+                        info_call['start_at'].append(start_transcript)          
+                        info_call['duration'].append(row['duration'])          
+                        info_call['result'].append(tag)
+                        
+                        path = f"{client}/{product}/{tag}"
+                        
+                        transcript = self.__toTranscription(id_call, messages, product, tag, started_at=start_transcript, platform='NUXIBA')
+                        zip_file.writestr(f"{path}/{id_call}.txt", transcript)
+            
+        zip_buffer.seek(0)
+        return zip_buffer
 
     def __toTranscription(self, thread_id, conversation, campaign, tag, started_at = None, ended_at = None, platform: Literal['NUXIBA', 'ALTUR', 'HIVECLOUD'] = 'HIVECLOUD'):
         ROLES = {
