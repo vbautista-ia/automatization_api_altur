@@ -72,6 +72,30 @@ def to_row_excel(campaign, contact):
         'extracted_data': contact['extracted_data'],
     }
     
+def call_to_row_excel(campaign, call):
+    contact = call['contact']
+    return {
+        'campaign_name': campaign['name'],
+        'campaign_date':  datetime.fromisoformat(campaign['created_at']).date(),
+        'id': call['id'],
+        'number_to': contact['phone_number'],
+        'contact_name': contact['name'],
+        'contact_f_id': contact['f_id'],
+        'type': call['type'],
+        'status': contact['status'],
+        'answered_by': call['answered_by'],
+        'created_at': iso_to_datetime(call['created_at']),
+        'started_at': iso_to_datetime(call['started_at']),
+        'ended_at': iso_to_datetime(call['ended_at']),
+        'ended_by': call['ended_by'],
+        'ended_reason': call['ended_reason'],
+        'duration': call['duration'],
+        'billed_duration': call['billed_duration'],
+        'recording_url': call['recording_url'],
+        'tags': call['tags'],
+        'extracted_data': call['extracted_data'],
+    }
+    
 def to_excel(prefix_name, result):
     logging.info("<<<<<<<<<< Save in excel flile >>>>>>>>>>")
     df = pd.DataFrame(result)
