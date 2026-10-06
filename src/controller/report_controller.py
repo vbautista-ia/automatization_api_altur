@@ -49,3 +49,22 @@ async def get_report_contacts(input_start: str, input_end: str,
                 media_type='application/x-zip-compressed',
                 headers=headers
             )
+    
+@router.get("/calls")
+async def get_report_calls(input_start: str, input_end: str,
+                    segmento: Literal['SPC_', 'DESPACHO_', 'WELCOME_', 'SERVICE_', 'RTG_'] = Query(default=None),
+                    report_service: ReportService = Depends(get_report_service),
+                    product: str = Query(default=None)):
+    response = await report_service.get_report_calls(input_start, input_end, segmento, product)
+    headers = { 'Content-Disposition': 'attacment; filename="report_calls.zip"'}
+    if response is None:
+        raise HTTPException(
+            status_code=404, 
+            detail="No se encontraron llamadas."
+        )
+
+    return StreamingResponse(
+                response,
+                media_type='application/x-zip-compressed',
+                headers=headers
+            )

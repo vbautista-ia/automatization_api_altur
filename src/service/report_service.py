@@ -12,7 +12,7 @@ from config.bots import Bots
 from config.platforms import Platforms
 from repository.campaigns_repository import CampaignRepository
 from repository.report_repository import ReportRepository
-from utils.utils import get_bots_by_paltform, get_bots_contains, get_bots_start_with, get_month, to_date_iso, to_excel, to_row_excel
+from utils.utils import call_to_row_excel, get_bots_by_paltform, get_bots_contains, get_bots_start_with, get_month, to_date_iso, to_excel, to_row_excel
 
 class Account():
     inicio: str
@@ -449,6 +449,49 @@ class ReportService:
                     
                     has_next = list_campaigns.get('pagination', {}).get('has_next', False)
                     cursor = list_campaigns.get('pagination', {}).get('next_cursor')
+            
+            if len(result) > 0:
+                month_report = get_month(datetime.fromisoformat(start).date())
+                return await asyncio.to_thread(to_excel, month_report, result)
+            else:
+                logging.info('Calls not found')
+
+    async def get_report_calls(self, date_start:str, date_end:str, agent_start_with:str = None, content: str = None):
+        bots = get_bots_by_paltform(self.PLATFORM)
+        agents = get_bots_start_with(bots, agent_start_with)
+        agents = get_bots_contains(agents, content)
+        
+        start = to_date_iso(date_start)
+        end = to_date_iso(date_end)
+        result = []
+        
+        async with httpx.AsyncClient(timeout=30.0) as client:
+            for agent, name_agent in agents.items():
+                has_next = True
+                cursor = None
+                
+                while has_next:    
+                    list_campaigns = await self.campaign_repository.list_campigns(client=client, started_after=start, started_before=end, cursor=cursor, agentId=agent)
+                    campaigns = list_campaigns.get('campaigns')
+                    print(campaigns)
+                    if campaigns:
+                        for campaign in campaigns:
+                            page_index = 0
+                            has_next_calls = True
+                    
+                            while has_next_calls:
+                                retrieved_calls = await self.campaign_repository.get_campaign_calls(client=client, id_campaign=campaign['id'], pageIndex=page_index)
+                                calls = retrieved_calls.get('calls')
+                    
+                                if calls:
+                                    result.extend([call_to_row_excel(campaign, call) for call in calls])
+                                calls_pagination = retrieved_calls.get('pagination', {})
+                                has_next_calls = calls_pagination.get('has_next', False)
+                                page_index = calls_pagination.get('next_page', 0)
+                    
+                    campaign_pagination = list_campaigns.get('pagination', {})
+                    has_next = campaign_pagination.get('has_next', False)
+                    cursor = campaign_pagination.get('next_cursor')
             
             if len(result) > 0:
                 month_report = get_month(datetime.fromisoformat(start).date())

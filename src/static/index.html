@@ -47,6 +47,41 @@
     </div>
 
     <div class="card shadow-sm mb-5">
+        <div class="card-header bg-primary text-white">
+            <h4 class="mb-0">Reporte de Llamadas</h4>
+        </div>
+        <div class="card-body">
+            <form id="formRepCalls" onsubmit="descargarReporteLlamadas(event)">
+                <div class="row g-3">
+                    <div class="col-md-6">
+                        <label class="form-label">Fecha Inicio (input_start)</label>
+                        <input type="datetime-local" step="1" class="form-control" name="input_start" required>
+                    </div>
+                    <div class="col-md-6">
+                        <label class="form-label">Fecha Fin (input_end)</label>
+                        <input type="datetime-local" step="1" class="form-control" name="input_end" required>
+                    </div>
+                    <div class="col-md-4">
+                        <label class="form-label">Segmento</label>
+                        <select class="form-select" name="segmento" required>
+                            <option value="">Todos</option>
+                            <option value="SPC_">SPC</option>
+                            <option value="DESPACHO_">DESPACHO</option>
+                        </select>
+                    </div>
+                    <div class="col-md-4">
+                        <label class="form-label">Producto <span class="text-muted">(Opcional)</span></label>
+                        <input type="text" class="form-control" name="product" placeholder="Ej. Hipotecario">
+                    </div>
+                </div>
+                <div class="mt-4 text-end">
+                    <button type="submit" class="btn btn-primary">Descargar Reporte (.zip)</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <div class="card shadow-sm mb-5">
         <div class="card-header bg-success text-white">
             <h4 class="mb-0">Descarga de Llamadas (Filtros)</h4>
         </div>
@@ -356,6 +391,11 @@
     function descargarReporte(e) {
         e.preventDefault();
         procesarDescargaGET('formContacts', '/report/contacts/api', 'report_contacts.zip');
+    }
+    
+    function descargarReporteLlamadas(e) {
+        e.preventDefault();
+        procesarDescargaGET('formRepCalls', '/report/calls', 'report_calls.zip');
     }
 
     function descargarLlamadas(e) {
