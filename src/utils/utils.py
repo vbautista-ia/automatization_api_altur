@@ -74,6 +74,10 @@ def to_row_excel(campaign, contact):
     
 def call_to_row_excel(campaign, call):
     contact = call['contact']
+    created_at = iso_to_datetime(call['created_at'])
+    started_at = iso_to_datetime(call['started_at'])
+    ended_at = iso_to_datetime(call['ended_at'])
+    
     return {
         'campaign_name': campaign['name'],
         'campaign_date':  datetime.fromisoformat(campaign['created_at']).date(),
@@ -84,9 +88,9 @@ def call_to_row_excel(campaign, call):
         'type': call['type'],
         'status': contact['status'],
         'answered_by': call['answered_by'],
-        'created_at': iso_to_datetime(call['created_at']),
-        'started_at': iso_to_datetime(call['started_at']),
-        'ended_at': iso_to_datetime(call['ended_at']),
+        'created_at': created_at.replace(tzinfo=None) if created_at else None ,
+        'started_at': started_at.replace(tzinfo=None) if started_at else None ,
+        'ended_at': ended_at.replace(tzinfo=None) if ended_at else None ,
         'ended_by': call['ended_by'],
         'ended_reason': call['ended_reason'],
         'duration': call['duration'],
