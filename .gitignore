@@ -56,5 +56,6 @@ Thumbs.db
 
 
 *.xlsx
-*.txt
 *.wav
+
+*.db

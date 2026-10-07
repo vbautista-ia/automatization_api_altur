@@ -1,0 +1,24 @@
+name: Despliegue en Servidor
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  deploy:
+    runs-on: self-hosted
+
+    steps:
+      - name: Descargar el código más reciente
+        uses: actions/checkout@v4
+
+      - name: Crear archivo .env
+        run: |
+          echo "${{ secrets.ENV_FILE }}" > .env
+
+      - name: Actualizar y levantar contenedores
+        run: |
+          docker-compose down
+          docker system prune -f
+          docker-compose up -d --build
